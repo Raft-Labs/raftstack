@@ -139,16 +139,132 @@ if (user.role === 'admin') { }
 if (user.role === 'admin') { }
 ```
 
+## Automated Enforcement
+
+### ESLint Configuration
+
+Enforce code quality with automated tools:
+
+```javascript
+// .eslintrc.js
+module.exports = {
+  rules: {
+    // Max function length
+    'max-lines-per-function': ['error', {
+      max: 30,
+      skipBlankLines: true,
+      skipComments: true,
+    }],
+
+    // Cyclomatic complexity
+    'complexity': ['error', { max: 10 }],
+
+    // Max file length
+    'max-lines': ['error', {
+      max: 300,
+      skipBlankLines: true,
+      skipComments: true,
+    }],
+
+    // Max function params
+    'max-params': ['error', 3],
+
+    // Max nested callbacks
+    'max-nested-callbacks': ['error', 2],
+
+    // No magic numbers
+    'no-magic-numbers': ['error', {
+      ignore: [0, 1, -1],
+      ignoreArrayIndexes: true,
+    }],
+  },
+};
+```
+
+### TypeScript-Specific Patterns
+
+```typescript
+// ✅ GOOD: Type-safe options object (not 5 params)
+interface CreateUserOptions {
+  email: string;
+  firstName: string;
+  lastName: string;
+  role?: UserRole;
+  sendWelcomeEmail?: boolean;
+}
+
+function createUser(options: CreateUserOptions): User {
+  // Single param, clear structure
+}
+
+// ✅ GOOD: Discriminated union for type-safe control flow
+type Result<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+function processOrder(order: Order): Result<OrderConfirmation> {
+  if (!isValid(order)) {
+    return { success: false, error: 'Invalid order' };
+  }
+
+  const confirmation = executeOrder(order);
+  return { success: true, data: confirmation };
+}
+
+// ✅ GOOD: Branded types for type safety
+type UserId = string & { readonly __brand: 'UserId' };
+type OrderId = string & { readonly __brand: 'OrderId' };
+
+function getUser(id: UserId): User { /* ... */ }
+
+// Won't compile - prevents mixing up IDs
+const orderId: OrderId = '123' as OrderId;
+getUser(orderId); // Type error!
+```
+
+## Testing Strategy
+
+```typescript
+// Test function length and complexity
+describe('Code Quality', () => {
+  it('functions stay under 30 lines', () => {
+    const functionSource = processOrder.toString();
+    const lines = functionSource.split('\n').filter(l => l.trim()).length;
+    expect(lines).toBeLessThanOrEqual(30);
+  });
+
+  it('maintains low cyclomatic complexity', () => {
+    // Use eslint-plugin-complexity or similar
+    const complexity = calculateComplexity(processOrder);
+    expect(complexity).toBeLessThanOrEqual(10);
+  });
+});
+
+// Test extracted helpers
+describe('Helper Functions', () => {
+  it('validateOrder handles invalid input', () => {
+    const result = validateOrder({ items: [] });
+    expect(result.valid).toBe(false);
+  });
+
+  it('calculateOrderTotal sums items correctly', () => {
+    const total = calculateOrderTotal(mockOrder);
+    expect(total).toBe(99.99);
+  });
+});
+```
+
 ## Quick Reference
 
-| Smell | Fix |
-|-------|-----|
-| Function > 30 lines | Extract helpers |
-| Repeated code block | Extract function |
-| Magic number | Named constant |
-| `validateAndProcess()` | Split into two functions |
-| Nested callbacks > 2 levels | Extract or use async/await |
-| Parameter list > 3 | Use options object |
+| Smell | Fix | ESLint Rule |
+|-------|-----|-------------|
+| Function > 30 lines | Extract helpers | `max-lines-per-function` |
+| Cyclomatic complexity > 10 | Extract conditionals | `complexity` |
+| Repeated code block | Extract function | Manual review |
+| Magic number | Named constant | `no-magic-numbers` |
+| `validateAndProcess()` | Split into two functions | Manual review |
+| Nested callbacks > 2 levels | Extract or use async/await | `max-nested-callbacks` |
+| Parameter list > 3 | Use options object | `max-params` |
 
 ## Red Flags - STOP and Refactor
 
@@ -176,6 +292,18 @@ When someone says "just make it work fast":
 
 **Violating code quality under pressure is violating code quality.**
 
+## References
+
+- [ESLint Complexity Rule](https://eslint.org/docs/latest/rules/complexity) - Cyclomatic complexity enforcement
+- [ESLintCC](https://eslintcc.github.io/) - Complexity measurement tool
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/) - Advanced type patterns
+- [Clean Code (Martin)](https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882) - Function length rationale
+
+**Version Notes:**
+- ESLint 9+: Flat config format, enhanced rule options
+- TypeScript 5+: Improved discriminated union narrowing
+- Cyclomatic complexity: Default threshold 20, recommended 10
+
 ## Common Mistakes
 
 | Mistake | Impact | Fix |
@@ -184,3 +312,7 @@ When someone says "just make it work fast":
 | Copy-paste code | Bugs multiply | Extract shared logic |
 | Cryptic names | Confusion | Descriptive, verb-first names |
 | No constants | Magic numbers everywhere | SCREAMING_SNAKE_CASE for all config |
+| No ESLint enforcement | Quality drifts over time | Add `complexity` and `max-lines-per-function` rules |
+| 5+ function parameters | Hard to call, hard to test | Use options object pattern |
+| Comments describe WHAT | Redundant, unmaintained | Comment WHY, not WHAT |
+| Mixing ID types (string) | Runtime bugs | Use branded types for type safety |
