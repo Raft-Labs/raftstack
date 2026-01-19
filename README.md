@@ -15,13 +15,13 @@ RaftStack automates the setup of development best practices including:
 
 ```bash
 # Using pnpm (recommended)
-pnpm dlx raftstack init
+pnpm dlx @raftlabs/raftstack init
 
 # Using npx
-npx raftstack init
+npx @raftlabs/raftstack init
 
 # Or install globally
-pnpm add -g raftstack
+pnpm add -g @raftlabs/raftstack
 raftstack init
 ```
 
