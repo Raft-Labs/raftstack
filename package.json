@@ -1,5 +1,5 @@
 {
-  "name": "raftstack",
+  "name": "@raftlabs/raftstack",
   "version": "1.0.0",
   "description": "CLI tool for setting up Git hooks, commit conventions, and GitHub integration",
   "type": "module",
@@ -24,7 +24,10 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "pnpm build",
+    "prepublish": "pnpm test:run && pnpm build",
+    "pack:test": "pnpm pack --dry-run",
+    "publish:test": "pnpm pack && tar -xvzf raftlabs-raftstack-*.tgz && rm -rf package raftlabs-raftstack-*.tgz"
   },
   "keywords": [
     "cli",
@@ -34,8 +37,20 @@
     "lint-staged",
     "developer-experience"
   ],
-  "author": "",
+  "author": "Aravind Jaimon <dev@aravindjaimon.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Raft-Labs/raftstack.git"
+  },
+  "homepage": "https://github.com/Raft-Labs/raftstack#readme",
+  "bugs": {
+    "url": "https://github.com/Raft-Labs/raftstack/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "packageManager": "pnpm@10.23.0",
   "engines": {
     "node": ">=18"
