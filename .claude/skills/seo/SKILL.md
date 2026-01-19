@@ -21,11 +21,13 @@ SEO requires three pillars: technical performance (Core Web Vitals), proper meta
 
 ### 1. Core Web Vitals Are Ranking Factors
 
-| Metric | Target | What It Measures |
-|--------|--------|------------------|
-| **LCP** (Largest Contentful Paint) | < 2.5s | Main content load time |
-| **INP** (Interaction to Next Paint) | < 200ms | Responsiveness |
-| **CLS** (Cumulative Layout Shift) | < 0.1 | Visual stability |
+| Metric | Target | What It Measures | Key Optimization |
+|--------|--------|------------------|------------------|
+| **LCP** (Largest Contentful Paint) | < 2.5s | Main content load time | `priority` on hero images |
+| **INP** (Interaction to Next Paint) | < 200ms | Responsiveness | scheduler.yield() for long tasks |
+| **CLS** (Cumulative Layout Shift) | < 0.1 | Visual stability | Always set width/height |
+
+#### LCP Optimization with Next.js Image
 
 ```typescript
 // ❌ BAD: Unoptimized image kills LCP
@@ -39,10 +41,70 @@ import Image from 'next/image';
   alt="Hero"
   width={1200}
   height={630}
-  priority // Preloads for LCP
+  priority // Preloads, disables lazy loading
+  placeholder="blur" // Shows blur during load
+  blurDataURL="data:image/..." // Optional blur data
   sizes="(max-width: 768px) 100vw, 50vw"
 />
+
+// ✅ GOOD: Static import auto-generates blur
+import heroImage from './hero.jpg';
+
+<Image
+  src={heroImage}
+  alt="Hero"
+  priority
+  placeholder="blur" // Blur data automatically provided
+/>
 ```
+
+#### INP Optimization (< 200ms)
+
+INP has three phases to optimize:
+
+**1. Input Delay** - Time until event handler starts
+**2. Processing Time** - Event handler execution
+**3. Presentation Delay** - Time to next frame
+
+```typescript
+// ❌ BAD: Long synchronous task blocks interactions
+button.addEventListener('click', () => {
+  // Heavy computation blocks UI for 500ms
+  const result = expensiveCalculation();
+  updateUI(result);
+});
+
+// ✅ GOOD: Break up with scheduler.yield()
+button.addEventListener('click', async () => {
+  const data = await fetchData();
+
+  // Yield to allow interactions to process
+  await scheduler.yield();
+
+  processData(data);
+
+  await scheduler.yield();
+
+  updateUI();
+});
+
+// ✅ GOOD: Debounce rapid interactions
+const debouncedSearch = debounce((query) => {
+  performSearch(query);
+}, 300);
+
+input.addEventListener('input', (e) => {
+  debouncedSearch(e.target.value);
+});
+```
+
+**Key INP strategies:**
+- Use `scheduler.yield()` in long tasks (> 50ms)
+- Debounce rapid user inputs
+- Lazy load below-fold interactivity
+- Avoid large DOM updates on interaction
+
+#### CLS Optimization
 
 ```typescript
 // ❌ BAD: CLS - no dimensions on dynamic content
@@ -54,6 +116,14 @@ import Image from 'next/image';
 <div className="product-list min-h-[400px]">
   {products.map(p => <ProductCard key={p.id} product={p} />)}
 </div>
+
+// ✅ GOOD: Always set dimensions on images
+<Image
+  src="/product.jpg"
+  alt="Product"
+  width={400}  // Prevents CLS
+  height={300}
+/>
 ```
 
 ### 2. Use Next.js Metadata API Correctly
@@ -165,6 +235,106 @@ function JsonLd({ data }: { data: object }) {
 | Local Business | LocalBusiness | Knowledge panel |
 | Breadcrumbs | BreadcrumbList | Breadcrumb trail in results |
 
+#### Article Schema
+
+```typescript
+const articleJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: post.title,
+  image: post.coverImage,
+  datePublished: post.publishedAt,
+  dateModified: post.updatedAt,
+  author: {
+    '@type': 'Person',
+    name: post.author.name,
+    url: `https://site.com/authors/${post.author.slug}`,
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Brand Name',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://site.com/logo.png',
+    },
+  },
+};
+```
+
+#### FAQPage Schema
+
+```typescript
+const faqJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: faq.answer,
+    },
+  })),
+};
+```
+
+## Sitemap & Robots
+
+### Dynamic Sitemap Generation
+
+```typescript
+// app/sitemap.ts
+import { MetadataRoute } from 'next';
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const products = await db.product.findMany({
+    select: { slug: true, updatedAt: true },
+  });
+
+  const productUrls = products.map((product) => ({
+    url: `https://site.com/products/${product.slug}`,
+    lastModified: product.updatedAt,
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }));
+
+  return [
+    {
+      url: 'https://site.com',
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 1,
+    },
+    ...productUrls,
+  ];
+}
+```
+
+### Robots.txt
+
+```typescript
+// app/robots.ts
+import { MetadataRoute } from 'next';
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/admin/', '/api/'],
+      },
+      {
+        userAgent: 'Googlebot',
+        allow: '/',
+        crawlDelay: 0,
+      },
+    ],
+    sitemap: 'https://site.com/sitemap.xml',
+  };
+}
+```
+
 ## Quick Reference: Metadata Checklist
 
 Every page needs:
@@ -180,12 +350,71 @@ For e-commerce:
 - [ ] Product JSON-LD with offers
 - [ ] Breadcrumb JSON-LD
 
-## Validation Tools
+## Testing & Measurement
+
+### Validation Tools (Before Deploy)
 
 Test structured data BEFORE deploying:
 - [Rich Results Test](https://search.google.com/test/rich-results) - Google's official tool
 - [Schema Markup Validator](https://validator.schema.org/) - schema.org validator
 - Chrome DevTools → Lighthouse → SEO audit
+
+### Performance Measurement
+
+| Tool | What It Measures | Use For |
+|------|------------------|---------|
+| **PageSpeed Insights** | Field data (28 days) | Official Core Web Vitals scores |
+| **Chrome User Experience Report (CrUX)** | Real user data | P75 scores for ranking |
+| **Lighthouse (DevTools)** | Lab data (simulated) | Local testing, not for ranking |
+| **Search Console** | Core Web Vitals report | Per-URL performance in field |
+
+**Critical:** Only **Field Data** (real users) affects Google rankings. Lab data helps debug but doesn't count for SEO.
+
+### Core Web Vitals Testing Strategy
+
+```typescript
+// Measure INP in production
+new PerformanceObserver((list) => {
+  for (const entry of list.getEntries()) {
+    if (entry.entryType === 'event') {
+      const inp = entry.processingStart - entry.startTime;
+      if (inp > 200) {
+        console.warn('Slow INP:', {
+          duration: inp,
+          name: entry.name,
+          target: entry.target,
+        });
+      }
+    }
+  }
+}).observe({ type: 'event', buffered: true });
+
+// Log slow LCP
+new PerformanceObserver((list) => {
+  const entries = list.getEntries();
+  const lcp = entries[entries.length - 1];
+  if (lcp.renderTime > 2500) {
+    console.warn('Slow LCP:', {
+      duration: lcp.renderTime,
+      element: lcp.element,
+      url: lcp.url,
+    });
+  }
+}).observe({ type: 'largest-contentful-paint', buffered: true });
+```
+
+## References
+
+- [Core Web Vitals INP Guide](https://web.dev/articles/inp) - Official INP optimization patterns
+- [Optimize INP](https://web.dev/articles/optimize-inp) - Three-phase optimization approach
+- [Next.js Image Component](https://nextjs.org/docs/app/api-reference/components/image) - priority, placeholder, sizes
+- [Next.js Metadata API](https://nextjs.org/docs/app/api-reference/functions/generate-metadata) - generateMetadata patterns
+- [Schema.org](https://schema.org/) - Structured data vocabulary
+
+**Version Notes:**
+- INP replaced FID as Core Web Vital (March 2024)
+- Next.js 15: Enhanced Image component with automatic blur
+- Good INP: < 200ms (improving from 500ms → 200ms = 22% engagement boost)
 
 ## Red Flags - STOP and Fix
 
@@ -196,6 +425,9 @@ Test structured data BEFORE deploying:
 | "LCP doesn't matter for this page" | Every page's performance affects site-wide ranking. |
 | "Using img tag is fine" | Next.js Image handles optimization. Always use it. |
 | "OpenGraph type='website' is fine" | Use 'product' for products, 'article' for articles. |
+| "Lab data (Lighthouse) is good enough" | Only field data counts for ranking. Test with real users. |
+| "INP is too complex to optimize" | Use scheduler.yield() and debouncing. Start simple. |
+| "I don't need a sitemap for small sites" | Sitemaps help discovery. Generate dynamically. |
 
 ## Common Mistakes
 
@@ -208,3 +440,7 @@ Test structured data BEFORE deploying:
 | Missing `priceValidUntil` in Offer | Required for Product rich snippets |
 | OpenGraph type='website' for products | Use type='product' |
 | No structured data validation | Test with Rich Results Test before deploy |
+| Long tasks without scheduler.yield() | Break up tasks > 50ms to improve INP |
+| Testing only with Lighthouse | Use PageSpeed Insights for field data |
+| No placeholder on LCP images | Add `placeholder="blur"` for perceived performance |
+| Dynamic sitemap with hardcoded URLs | Fetch from database for automatic updates |
