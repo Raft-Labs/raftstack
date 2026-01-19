@@ -1,0 +1,45 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+
+# Tests
+**/__tests__/
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+vitest.config.ts
+
+# Development
+.vscode/
+.idea/
+*.log
+.DS_Store
+node_modules/
+
+# Config files
+tsconfig.json
+tsconfig.tsbuildinfo
+tsup.config.ts
+.eslintrc*
+.prettierrc*
+
+# CI/CD
+.github/
+.husky/
+
+# Documentation (keep README)
+CLAUDE.md
+CONTRIBUTING.md
+MAINTAINERS.md
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Package manager
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
