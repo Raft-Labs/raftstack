@@ -225,6 +225,100 @@ const formatted = result.error.format();
 */
 ```
 
+#### Default & Catch for Fallbacks
+
+```typescript
+// ✅ GOOD: Default for undefined input
+const StringWithDefault = z.string().default('unknown');
+StringWithDefault.parse(undefined); // => 'unknown'
+
+// ✅ GOOD: Dynamic default
+const TimestampSchema = z.date().default(() => new Date());
+
+// ✅ GOOD: Catch for validation failures
+const SafeNumber = z.number().catch(0);
+SafeNumber.parse('invalid'); // => 0 (no throw)
+
+// ✅ GOOD: Catch with error context
+const SafeString = z.string().catch((ctx) => {
+  console.error('Validation failed:', ctx.error);
+  return 'fallback';
+});
+
+// ✅ GOOD: Prefault for pre-parse defaults (transformations apply)
+const TrimmedDefault = z.string().trim().prefault('  hello  ');
+TrimmedDefault.parse(undefined); // => 'hello' (trimmed)
+```
+
+#### Pipe for Schema Chaining
+
+```typescript
+// ✅ GOOD: Chain transformations
+const TrimmedUppercase = z.string()
+  .pipe(z.string().trim())
+  .pipe(z.string().toUpperCase());
+
+TrimmedUppercase.parse('  hello  '); // => 'HELLO'
+
+// ✅ GOOD: Pipe with validation
+const PositiveInt = z.string()
+  .pipe(z.coerce.number())
+  .pipe(z.number().int().positive());
+
+PositiveInt.parse('42'); // => 42
+```
+
+#### Branded Types for IDs
+
+```typescript
+// ✅ GOOD: Type-safe IDs prevent mixing
+const UserId = z.string().uuid().brand<'UserId'>();
+const OrderId = z.string().uuid().brand<'OrderId'>();
+
+type UserId = z.infer<typeof UserId>;    // string & Brand<'UserId'>
+type OrderId = z.infer<typeof OrderId>;  // string & Brand<'OrderId'>
+
+function getUser(id: UserId) { /* ... */ }
+function getOrder(id: OrderId) { /* ... */ }
+
+const userId = UserId.parse('abc-123');
+const orderId = OrderId.parse('def-456');
+
+getUser(userId);      // ✅ OK
+getUser(orderId);     // ❌ TypeScript error - wrong ID type
+getOrder(orderId);    // ✅ OK
+```
+
+#### Custom Error Maps
+
+```typescript
+// ✅ GOOD: Global custom error messages
+import { z } from 'zod';
+
+const customErrorMap: z.ZodErrorMap = (issue, ctx) => {
+  switch (issue.code) {
+    case z.ZodIssueCode.invalid_type:
+      if (issue.expected === 'string') {
+        return { message: 'This field must be text' };
+      }
+      break;
+    case z.ZodIssueCode.too_small:
+      if (issue.type === 'string') {
+        return { message: `Minimum ${issue.minimum} characters required` };
+      }
+      break;
+  }
+  return { message: ctx.defaultError };
+};
+
+// Apply globally
+z.setErrorMap(customErrorMap);
+
+// Or per-schema
+const schema = z.string();
+schema.parse(12, { errorMap: customErrorMap });
+```
+
 ### 4. Service Layer: Pure Business Logic
 
 Services contain business rules. They don't know about HTTP, AWS, or databases - only interfaces.
@@ -391,6 +485,99 @@ export const handler = async (event) => {
 - [ ] Consider provisioned concurrency for critical paths
 - [ ] Lazy load heavy libraries when possible
 
+## Middleware Patterns (API Gateway)
+
+### Request Validation Middleware
+
+```typescript
+// ✅ GOOD: Reusable validation middleware
+import { z } from 'zod';
+
+export function withValidation<T extends z.ZodSchema>(
+  schema: T,
+  handler: (event: { body: z.infer<T> }) => Promise<any>
+) {
+  return async (event: any) => {
+    const body = JSON.parse(event.body || '{}');
+    const result = schema.safeParse(body);
+
+    if (!result.success) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: 'Validation failed',
+          details: result.error.flatten().fieldErrors,
+        }),
+      };
+    }
+
+    return handler({ ...event, body: result.data });
+  };
+}
+
+// Usage
+export const handler = withValidation(
+  CreateUserSchema,
+  async ({ body }) => {
+    // body is typed as CreateUserInput
+    const user = await userService.createUser(body);
+    return { statusCode: 201, body: JSON.stringify(user) };
+  }
+);
+```
+
+### Error Handling Middleware
+
+```typescript
+// ✅ GOOD: Centralized error handling
+export function withErrorHandling(
+  handler: (event: any) => Promise<any>
+) {
+  return async (event: any) => {
+    try {
+      return await handler(event);
+    } catch (error) {
+      if (error instanceof AppError) {
+        return {
+          statusCode: error.statusCode,
+          body: JSON.stringify({
+            error: error.message,
+            code: error.code,
+          }),
+        };
+      }
+
+      console.error('Unexpected error:', error);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: 'Internal server error' }),
+      };
+    }
+  };
+}
+```
+
+### Compose Middleware
+
+```typescript
+// ✅ GOOD: Compose multiple middleware
+function compose(...middlewares: Array<(handler: any) => any>) {
+  return (handler: any) =>
+    middlewares.reduceRight((acc, middleware) => middleware(acc), handler);
+}
+
+// Usage
+const baseHandler = async ({ body }: { body: CreateUserInput }) => {
+  const user = await userService.createUser(body);
+  return { statusCode: 201, body: JSON.stringify(user) };
+};
+
+export const handler = compose(
+  withErrorHandling,
+  withValidation(CreateUserSchema)
+)(baseHandler);
+```
+
 ## Testing Strategy
 
 | What to Test | How |
@@ -453,6 +640,45 @@ describe('UserService', () => {
       })
     ).rejects.toThrow(ConflictError);
   });
+
+  it('handles repository errors gracefully', async () => {
+    const mockRepo = {
+      save: vi.fn().mockRejectedValue(new Error('DB connection failed')),
+      findByEmail: vi.fn().mockResolvedValue(null),
+    };
+
+    const service = createUserService(mockRepo, {} as any);
+
+    await expect(
+      service.createUser({
+        email: 'test@example.com',
+        password: 'Password123',
+        firstName: 'John',
+        lastName: 'Doe',
+      })
+    ).rejects.toThrow('DB connection failed');
+  });
+
+  it('uses vi.spyOn to track method calls', async () => {
+    const repo = {
+      save: async (user: any) => user,
+      findByEmail: async (email: string) => null,
+    };
+
+    const saveSpy = vi.spyOn(repo, 'save');
+    const findSpy = vi.spyOn(repo, 'findByEmail');
+
+    const service = createUserService(repo, {} as any);
+    await service.createUser({
+      email: 'test@example.com',
+      password: 'Password123',
+      firstName: 'John',
+      lastName: 'Doe',
+    });
+
+    expect(findSpy).toHaveBeenCalledWith('test@example.com');
+    expect(saveSpy).toHaveBeenCalledOnce();
+  });
 });
 
 // Test Zod validation
@@ -508,12 +734,15 @@ describe('Handler', () => {
 
 ## References
 
-- [Zod Documentation](https://zod.dev) - Validation, transforms, error formatting
+- [Zod Documentation](https://zod.dev) - Validation, transforms, error formatting, branded types
+- [Vitest Documentation](https://vitest.dev) - Testing, mocking, vi.fn(), vi.spyOn()
 - [AWS Lambda Cold Starts](https://aws.amazon.com/blogs/compute/understanding-and-remediating-cold-starts-an-aws-lambda-perspective/) - Official optimization guide
 - [AWS Lambda Performance](https://aws.amazon.com/blogs/compute/operating-lambda-performance-optimization-part-1/) - Best practices
 
 **Version Notes:**
-- Zod v3.24+: Improved error formatting, discriminated unions
+- Zod v3.24+: Improved error formatting, discriminated unions, branded types
+- Zod v4.0+: prefault(), enhanced pipe(), performance improvements
+- Vitest v3+: mockResolvedValue, mockRejectedValue patterns
 - AWS Lambda: Node.js 20.x has faster cold starts than 18.x
 
 ## Quick Reference: Lambda Structure
@@ -547,6 +776,10 @@ src/
 | "I'll initialize clients in the handler" | Module-level initialization reuses across invocations. |
 | "flatten() and format() do the same thing" | flatten() for forms, format() for nested objects. |
 | "Discriminated unions are overkill" | They make response handling type-safe and explicit. |
+| "I don't need .catch() for this" | Catch prevents throws for invalid data. Use for fallbacks. |
+| "Branded types are unnecessary" | They prevent mixing UserId with OrderId at compile time. |
+| "I'll copy-paste validation in handlers" | Extract to middleware. Don't repeat yourself. |
+| "prefault() is the same as default()" | prefault applies BEFORE transforms, default after. |
 
 ## Common Mistakes
 
@@ -562,3 +795,8 @@ src/
 | String validation without coercion | Use `z.coerce` for query params and form data |
 | No discriminated unions | Use for type-safe API responses and request routing |
 | Heavy deps loaded always | Lazy load with dynamic `import()` when needed |
+| Not using .catch() for optional fields | Use `.catch()` for fallback values instead of throw |
+| Mixing ID types | Use branded types (z.string().brand<'UserId'>()) |
+| Duplicate validation in handlers | Extract to reusable middleware |
+| Using default() expecting transforms | Use prefault() if transforms should apply to default |
+| Not testing async rejections | Use mockRejectedValue() for error scenarios |
