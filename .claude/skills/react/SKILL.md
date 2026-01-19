@@ -71,6 +71,8 @@ Data fetching belongs on the server. Only add 'use client' when you need:
 - useState, useEffect, useReducer
 - Browser APIs (localStorage, window)
 
+**Keep 'use client' boundaries deep** to minimize JavaScript bundle size.
+
 ```typescript
 // ✅ GOOD: Server Component fetches data
 // app/products/page.tsx
@@ -86,6 +88,16 @@ function ProductsPage() {
   useEffect(() => {
     fetch('/api/products').then(...) // Extra round-trip
   }, []);
+}
+
+// ✅ GOOD: Mixed - only Search is client
+function Layout({ children }) {
+  return (
+    <nav>
+      <Logo /> {/* Server Component */}
+      <Search /> {/* 'use client' - only this interactive */}
+    </nav>
+  );
 }
 ```
 
@@ -156,6 +168,161 @@ const [submitted, setSubmitted] = useState(false);
 const [formState, dispatch] = useReducer(formReducer, initialState);
 ```
 
+### 6. Server Actions for Forms (Next.js App Router)
+
+Server Actions handle mutations without API routes. Use `useActionState` (React 19+) for form state.
+
+```typescript
+// ✅ GOOD: Server Action with validation
+'use server';
+import { z } from 'zod';
+
+const schema = z.object({
+  email: z.string().email(),
+  name: z.string().min(2)
+});
+
+export async function createUser(prevState: any, formData: FormData) {
+  const validatedFields = schema.safeParse({
+    email: formData.get('email'),
+    name: formData.get('name')
+  });
+
+  if (!validatedFields.success) {
+    return { errors: validatedFields.error.flatten().fieldErrors };
+  }
+
+  // Return error object, DON'T throw
+  const result = await db.user.create(validatedFields.data);
+  if (!result.ok) return { message: 'Failed to create user' };
+
+  redirect('/users');
+}
+
+// Client Component using the action
+'use client';
+import { useActionState } from 'react';
+
+export function SignupForm() {
+  const [state, formAction, isPending] = useActionState(createUser, { message: '' });
+
+  return (
+    <form action={formAction}>
+      <input type="email" name="email" required />
+      {state?.errors?.email && <p>{state.errors.email}</p>}
+
+      <input type="text" name="name" required />
+      {state?.errors?.name && <p>{state.errors.name}</p>}
+
+      <button disabled={isPending}>Sign up</button>
+      {state?.message && <p aria-live="polite">{state.message}</p>}
+    </form>
+  );
+}
+```
+
+**Key patterns:**
+- Server Actions return error objects, never throw
+- Use `useActionState` for form state + pending + errors
+- Progressive enhancement: works without JS
+- Validate with Zod in Server Action
+
+## React 19 Features
+
+### use() Hook - Read Promises/Context
+
+```typescript
+import { use } from 'react';
+
+// ✅ Read promise in component
+function Message({ messagePromise }: { messagePromise: Promise<string> }) {
+  const message = use(messagePromise); // Suspends until resolved
+  return <p>{message}</p>;
+}
+
+// ✅ Read context without Consumer
+function Button() {
+  const theme = use(ThemeContext);
+  return <button className={theme}>Click</button>;
+}
+```
+
+### useOptimistic - Instant UI Updates
+
+```typescript
+'use client';
+import { useOptimistic } from 'react';
+
+function TodoList({ todos }: { todos: Todo[] }) {
+  const [optimisticTodos, addOptimistic] = useOptimistic(
+    todos,
+    (state, newTodo: Todo) => [...state, newTodo]
+  );
+
+  async function handleAdd(formData: FormData) {
+    const newTodo = { id: Date.now(), text: formData.get('todo') };
+    addOptimistic(newTodo); // Instant update
+    await addTodo(formData); // Server mutation
+  }
+
+  return (
+    <form action={handleAdd}>
+      <input name="todo" />
+      <button type="submit">Add</button>
+      <ul>
+        {optimisticTodos.map(todo => <li key={todo.id}>{todo.text}</li>)}
+      </ul>
+    </form>
+  );
+}
+```
+
+**Auto-reverts on error** - no manual rollback needed.
+
+## Streaming & Suspense
+
+### Full Page Streaming with loading.tsx
+
+```typescript
+// app/posts/loading.tsx
+export default function Loading() {
+  return <PostsSkeleton />;
+}
+
+// app/posts/page.tsx (automatically wrapped in Suspense)
+export default async function PostsPage() {
+  const posts = await fetchPosts(); // Streams when ready
+  return <PostsList posts={posts} />;
+}
+```
+
+### Granular Streaming with Suspense
+
+```typescript
+import { Suspense } from 'react';
+
+export default function Dashboard() {
+  return (
+    <div>
+      <h1>Dashboard</h1> {/* Sent immediately */}
+
+      <Suspense fallback={<StatsSkeleton />}>
+        <Stats /> {/* Async, streams later */}
+      </Suspense>
+
+      <Suspense fallback={<ChartSkeleton />}>
+        <RevenueChart /> {/* Async, independent stream */}
+      </Suspense>
+    </div>
+  );
+}
+```
+
+**Benefits:**
+- TTFB improvement - show shell instantly
+- Independent loading states
+- Partial prefetching for faster navigation
+
 ## Quick Reference: Framework Patterns
 
 | Task | Next.js App Router | Remix | Vite SPA |
@@ -167,6 +334,63 @@ const [formState, dispatch] = useReducer(formReducer, initialState);
 | Metadata | metadata export | meta function | react-helmet |
 | Navigation | Link + router | Link + navigate | Link + navigate |
 
+## Testing Strategy
+
+| What to Test | How |
+|--------------|-----|
+| Server Components | Import directly, verify data fetching |
+| Client Components | Render with Testing Library, verify interactions |
+| Server Actions | Call with FormData, assert return values |
+| Suspense fallbacks | Wait for async resolution, verify both states |
+| Forms with useActionState | Submit form, verify pending/error/success states |
+
+```typescript
+// Test Server Component
+import ProductsPage from '@/app/products/page';
+
+test('fetches and displays products', async () => {
+  const result = await ProductsPage(); // It's an async function
+  expect(result.props.children).toContain('Product 1');
+});
+
+// Test Server Action
+import { createUser } from '@/app/actions';
+
+test('validates email format', async () => {
+  const formData = new FormData();
+  formData.set('email', 'invalid');
+
+  const result = await createUser(null, formData);
+  expect(result.errors.email).toBeDefined();
+});
+
+// Test Client Component with Suspense
+import { render, waitFor } from '@testing-library/react';
+
+test('shows fallback then content', async () => {
+  const { getByText, queryByText } = render(
+    <Suspense fallback={<div>Loading...</div>}>
+      <AsyncComponent />
+    </Suspense>
+  );
+
+  expect(getByText('Loading...')).toBeInTheDocument();
+  await waitFor(() => expect(queryByText('Loading...')).not.toBeInTheDocument());
+  expect(getByText('Content')).toBeInTheDocument();
+});
+```
+
+## References
+
+- [Next.js Documentation](https://nextjs.org/docs) - App Router, Server Components, Server Actions
+- [React 19 Release](https://react.dev/blog/2024/12/05/react-19) - use(), useActionState, useOptimistic
+- [React Server Components](https://react.dev/reference/rsc/server-components) - Official RSC guide
+
+**Version Notes:**
+- Next.js 14+: App Router stable, Server Actions stable
+- Next.js 15: Enhanced caching, Turbopack, React 19 support
+- React 19: use(), Actions, useOptimistic, useActionState
+
 ## Red Flags - STOP and Restructure
 
 | Thought | Reality |
@@ -177,6 +401,10 @@ const [formState, dispatch] = useReducer(formReducer, initialState);
 | "Let me add useState for this" | Check: can it be URL params, server state, or derived? |
 | "Redux for this small app" | Zustand/Jotai unless you have 50+ reducers. |
 | "I need useEffect for this fetch" | In Next.js/Remix: no. Use server components or loaders. |
+| "I'll create an API route for this form" | Use Server Actions - no API route needed. |
+| "Let me throw an error in Server Action" | Return error object for useActionState. Don't throw. |
+| "I'll add 'use client' to the whole layout" | Keep boundaries deep. Only interactive parts need it. |
+| "Forms need JavaScript to work" | Server Actions work with progressive enhancement. |
 
 ## Common Mistakes
 
