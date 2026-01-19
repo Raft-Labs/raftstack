@@ -139,6 +139,186 @@ id: serial("id").primaryKey(),
 id: varchar("id", { length: 26 }).primaryKey().$default(() => ulid()),
 ```
 
+## Migration Strategy
+
+### Generate vs Push
+
+| Command | Use When | Output |
+|---------|----------|--------|
+| `drizzle-kit generate` | Production, team environments | SQL migration files + snapshots |
+| `drizzle-kit migrate` | Apply versioned migrations | Executes generated SQL files |
+| `drizzle-kit push` | Local dev, rapid prototyping | Direct schema push, no files |
+
+```bash
+# Production workflow: versioned migrations
+npx drizzle-kit generate  # Creates migrations/0001_*.sql
+npx drizzle-kit migrate   # Applies to database
+
+# Dev workflow: quick iteration
+npx drizzle-kit push      # Direct push, no migration files
+```
+
+**Always use `generate` + `migrate` for:**
+- Production databases
+- Team collaboration
+- Audit trail requirements
+- Rollback capability
+
+### Migration Files Structure
+
+```
+migrations/
+├── 0001_init.sql              # First migration
+├── 0002_add_orders_table.sql  # Sequential
+├── meta/
+│   ├── 0001_snapshot.json     # Schema snapshots
+│   └── 0002_snapshot.json
+```
+
+## Relations & Nested Queries
+
+### Define Relations in Schema
+
+```typescript
+import { relations } from 'drizzle-orm';
+
+export const users = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: varchar('name', { length: 255 }).notNull(),
+});
+
+export const posts = pgTable('posts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: uuid('user_id').notNull().references(() => users.id),
+  title: varchar('title', { length: 255 }).notNull(),
+}, (table) => ({
+  userIdIdx: index('posts_user_id_idx').on(table.userId),
+}));
+
+// Define relations
+export const usersRelations = relations(users, ({ many }) => ({
+  posts: many(posts),
+}));
+
+export const postsRelations = relations(posts, ({ one }) => ({
+  user: one(users, { fields: [posts.userId], references: [users.id] }),
+}));
+```
+
+### Query with Relations (Avoids N+1)
+
+```typescript
+// ✅ GOOD: Single query with join
+const usersWithPosts = await db.query.users.findMany({
+  with: {
+    posts: true, // Eagerly loaded
+  },
+});
+
+// ✅ GOOD: Nested relations
+const usersWithPostsAndComments = await db.query.users.findMany({
+  with: {
+    posts: {
+      with: {
+        comments: true,
+      },
+    },
+  },
+});
+
+// ✅ GOOD: Filtered nested queries
+const activeUsersWithRecentPosts = await db.query.users.findMany({
+  where: eq(users.status, 'active'),
+  with: {
+    posts: {
+      where: gte(posts.createdAt, new Date('2024-01-01')),
+      limit: 10,
+    },
+  },
+});
+
+// ❌ BAD: N+1 query problem
+const users = await db.select().from(users);
+for (const user of users) {
+  user.posts = await db.select().from(posts).where(eq(posts.userId, user.id));
+}
+```
+
+## Prepared Statements
+
+Use prepared statements for repeated queries to cache query plans.
+
+```typescript
+// ✅ GOOD: Prepared statement with placeholders
+const getUserWithPosts = db.query.users.findFirst({
+  where: eq(users.id, sql.placeholder('userId')),
+  with: {
+    posts: {
+      where: eq(posts.status, sql.placeholder('status')),
+    },
+  },
+}).prepare('get_user_posts'); // Name required for PostgreSQL
+
+// Execute multiple times
+const user1 = await getUserWithPosts.execute({ userId: '123', status: 'published' });
+const user2 = await getUserWithPosts.execute({ userId: '456', status: 'published' });
+
+// ✅ GOOD: Simple prepared query
+const getOrdersByUser = db
+  .select()
+  .from(orders)
+  .where(eq(orders.userId, sql.placeholder('userId')))
+  .prepare('orders_by_user');
+
+const orders = await getOrdersByUser.execute({ userId: '123' });
+```
+
+**When to use:**
+- High-traffic endpoints
+- Repeated queries with different params
+- Query optimization critical paths
+
+## Serverless Connection Pooling
+
+### Neon Serverless
+
+```typescript
+import { Pool } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const db = drizzle({ client: pool });
+
+// For Node.js with WebSockets
+import ws from 'ws';
+import { neonConfig } from '@neondatabase/serverless';
+
+neonConfig.webSocketConstructor = ws;
+```
+
+### Vercel Postgres
+
+```typescript
+import { drizzle } from 'drizzle-orm/vercel-postgres';
+
+const db = drizzle(); // Automatically uses POSTGRES_URL from env
+```
+
+### Edge Runtime (HTTP-based)
+
+```typescript
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+
+const sql = neon(process.env.DATABASE_URL);
+const db = drizzle({ client: sql });
+```
+
+**Key considerations:**
+- HTTP drivers for edge: no TCP connections
+- Pool for serverless: handles connection lifecycle
+- WebSocket for Node: better performance
+
 ## Quick Reference: Index Types
 
 | Index Type | Use For | Example |
@@ -166,6 +346,94 @@ Before committing a schema:
 - [ ] `updatedAt` has `$onUpdate`
 - [ ] Considered partial indexes for subsets
 - [ ] Timestamps indexed if used in WHERE/ORDER BY
+- [ ] Relations defined for nested queries
+- [ ] Migration generated (not just pushed)
+
+## Testing Strategy
+
+| What to Test | How |
+|--------------|-----|
+| Migrations | Apply to test DB, verify schema |
+| Query performance | Use EXPLAIN ANALYZE |
+| Index usage | Check query plans for index scans |
+| Relations | Verify single query, not N+1 |
+| Prepared statements | Benchmark vs regular queries |
+
+```typescript
+// Test migration applies cleanly
+import { migrate } from 'drizzle-orm/neon-serverless/migrator';
+
+test('migrations apply successfully', async () => {
+  await migrate(db, { migrationsFolder: './migrations' });
+  // Verify tables exist
+  const result = await db.execute(sql`SELECT tablename FROM pg_tables WHERE schemaname='public'`);
+  expect(result.rows).toContainEqual({ tablename: 'users' });
+});
+
+// Test index usage with EXPLAIN
+test('query uses index for user lookup', async () => {
+  const plan = await db.execute(sql`
+    EXPLAIN (FORMAT JSON)
+    SELECT * FROM orders WHERE user_id = '123'
+  `);
+  const planText = JSON.stringify(plan.rows);
+  expect(planText).toContain('Index Scan'); // Not Seq Scan
+  expect(planText).toContain('orders_user_id_idx');
+});
+
+// Test relations avoid N+1
+test('users with posts executes single query', async () => {
+  const startTime = Date.now();
+  const users = await db.query.users.findMany({
+    with: { posts: true },
+  });
+  const duration = Date.now() - startTime;
+
+  expect(users).toHaveLength(100);
+  expect(users[0].posts).toBeDefined();
+  expect(duration).toBeLessThan(100); // Single query is fast
+});
+```
+
+## Performance Validation Tools
+
+### EXPLAIN ANALYZE
+
+```sql
+-- Check if index is used
+EXPLAIN ANALYZE
+SELECT * FROM orders
+WHERE user_id = 'abc' AND status = 'pending';
+
+-- Look for:
+-- ✅ Index Scan using orders_user_status_idx
+-- ❌ Seq Scan on orders (missing index!)
+```
+
+### Query Metrics
+
+```typescript
+// Log slow queries in production
+import { sql } from 'drizzle-orm';
+
+const startTime = Date.now();
+const result = await db.query.users.findMany({ with: { posts: true } });
+const duration = Date.now() - startTime;
+
+if (duration > 100) {
+  console.warn(`Slow query: ${duration}ms`, { query: 'users.findMany' });
+}
+```
+
+## References
+
+- [Drizzle ORM Documentation](https://orm.drizzle.team/docs/overview) - Relations, prepared statements, migrations
+- [PostgreSQL Indexes](https://www.postgresql.org/docs/current/indexes.html) - Index types and usage
+- [Drizzle Kit](https://orm.drizzle.team/docs/kit-overview) - Migration management
+
+**Version Notes:**
+- Drizzle ORM 0.30+: Improved relations API
+- Drizzle Kit 0.20+: Enhanced migration generation
 
 ## Red Flags - STOP and Add Indexes
 
@@ -176,6 +444,10 @@ Before committing a schema:
 | "The table is small" | Tables grow. Index from day one. |
 | "I don't know the query patterns yet" | FK indexes are always needed. Start there. |
 | "JSON as text is fine for now" | JSONB costs nothing extra. Use it. |
+| "I'll just push for now" | Use generate for prod. You need migration history. |
+| "Relations are overhead" | They prevent N+1 and generate optimal queries. |
+| "Prepared statements are premature" | They're free performance for repeated queries. |
+| "I'll fetch users then their posts" | N+1 problem. Use `with` for single query. |
 
 ## Common Mistakes
 
@@ -187,3 +459,7 @@ Before committing a schema:
 | Missing $onUpdate | Add for `updatedAt` columns |
 | Unique without index awareness | `unique()` creates index, but document intent |
 | No partial index | Use `where()` for subset queries |
+| Using push in production | Use `drizzle-kit generate` + `migrate` for versioning |
+| N+1 queries with loops | Define relations, use `with` for nested data |
+| No prepared statements | Use `.prepare()` for repeated queries |
+| HTTP driver in Node serverless | Use Pool with WebSockets for better performance |
