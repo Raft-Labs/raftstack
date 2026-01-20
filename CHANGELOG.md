@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.2.1](https://github.com/Raft-Labs/raftstack/compare/v1.2.0...v1.2.1) (2026-01-20)
+
+
+### Bug Fixes
+
+* correct path resolution for Claude skills directory ([c4ce1b8](https://github.com/Raft-Labs/raftstack/commit/c4ce1b858496a3993585ecd00751528a6c65e4c6))
+
+
+### Documentation
+
+* add automated versioning implementation plan ([d023e62](https://github.com/Raft-Labs/raftstack/commit/d023e6294f1de72f6f1fd1316f867afdc9c3a402))
+* add repository setup instructions ([144d188](https://github.com/Raft-Labs/raftstack/commit/144d188277263d247a032a6aa99c40346a114382))
+* add version commands quick reference ([4b0698d](https://github.com/Raft-Labs/raftstack/commit/4b0698de8512d468a2dc7522dd5f014b70616c8c))
+* mark completed items in phase plans ([ad90c74](https://github.com/Raft-Labs/raftstack/commit/ad90c74a18db37f402fb613d451729d2aa355587))
+* mark Phase 1 and Phase 2 tasks complete ([a6b972c](https://github.com/Raft-Labs/raftstack/commit/a6b972c01ce8729bba7ccb5ffb87fd77e645dd3e))
+* mark Phase 3 pre-release tasks complete ([c24cf2c](https://github.com/Raft-Labs/raftstack/commit/c24cf2ceaef19492447226d9bf823ceefe934e95))
+* update progress with automated versioning status ([52a2d47](https://github.com/Raft-Labs/raftstack/commit/52a2d474209d54f4647b1315aeaf842f2db9acbe))
+
 ## [1.2.0](https://github.com/Raft-Labs/raftstack/compare/v1.0.0...v1.2.0) (2026-01-20)
 
 
