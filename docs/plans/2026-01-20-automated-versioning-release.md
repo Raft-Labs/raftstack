@@ -789,7 +789,8 @@ git commit -m "docs: add version commands quick reference"
 - [x] VERSION_COMMANDS.md quick reference created
 - [ ] GitHub repository settings configured (requires NPM_TOKEN secret)
 - [x] First automated release successful (v1.2.0)
-- [ ] npm package published with new version (blocked on NPM_TOKEN)
+- [x] Bug fix release v1.2.1 (Claude skills path resolution)
+- [ ] npm package published with new version (blocked on NPM_TOKEN/OTP)
 - [x] CHANGELOG.md generated correctly
 
 ### Success Criteria
