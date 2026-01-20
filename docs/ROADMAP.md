@@ -16,7 +16,7 @@ RaftStack is a CLI tool that enforces consistent Git workflows, commit conventio
 | Phase | Name | Status | Description |
 |-------|------|--------|-------------|
 | 0 | [Stabilization](./plans/phase-0-stabilization.md) | ✅ Complete | Skills bundling, CI workflow |
-| 1 | [Testing](./plans/phase-1-testing.md) | ✅ Complete | 191 tests (unit, integration, E2E) |
+| 1 | [Testing](./plans/phase-1-testing.md) | ✅ Complete | 199 tests (unit, integration, E2E) |
 | 2 | [Features](./plans/phase-2-features.md) | ✅ Complete | ESLint generator, enhanced branch protection |
 | 3 | [Pre-Release](./plans/phase-3-pre-release.md) | ✅ Ready | All dev complete, awaiting npm publish |
 | 4 | [Pilot](./plans/phase-4-pilot.md) | Not Started | Deploy to one real project for validation |

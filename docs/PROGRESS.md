@@ -31,7 +31,7 @@
   - README.md with features, Claude Code skills, ESLint section, troubleshooting
   - CHANGELOG.md with v1.0.0 release notes
 - **3.3 Release Preparation** - ✅ Complete
-  - All 191 tests passing
+  - All 199 tests passing
   - TypeScript compilation clean
   - Build produces 57KB bundled CLI
   - Package verified with `pnpm pack`
@@ -110,7 +110,7 @@ pnpm dlx @raftlabs/raftstack init
   - Added PR size guidelines to CONTRIBUTING.md
   - Verified all goal.md requirements are met
 
-**Total Test Count: 191 tests across 18 files**
+**Total Test Count: 199 tests across 19 files**
 
 ---
 
@@ -132,7 +132,7 @@ pnpm dlx @raftlabs/raftstack init
 - ESLint 9 flat config generator (auto-detects React, TypeScript)
 - Enhanced branch protection (multi-branch, merge strategies)
 - Generator completeness review and fixes
-- Total: 191 tests passing
+- Total: 199 tests passing
 
 **2026-01-20:** Completed Phase 3 - Pre-Release:
 - All manual testing scenarios covered by E2E tests (15 tests)

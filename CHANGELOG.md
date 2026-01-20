@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-01-20
+
+### Added
+
+#### CLI Commands
+- `raftstack metrics` - Analyze repository compliance with RaftStack conventions
+  - Commit task link compliance (Asana/GitHub issue references)
+  - Branch naming convention compliance
+  - Color-coded compliance percentages
+
+#### Generators
+- **Quick Reference guide** - `.github/QUICK_REFERENCE.md` one-page cheat sheet
+  - Branch naming conventions
+  - Commit format with emojis
+  - PR checklist
+  - Common mistakes to avoid
+
+#### Org Rollout Support
+- **Deployment helper script** - `scripts/deploy-to-project.sh` for batch rollout
+  - Creates setup branch
+  - Runs init with defaults
+  - Commits and creates PR
+
+### Changed
+- Test count increased from 191 to 199 (8 new quick-reference tests)
+- Updated documentation for Phase 4/5 rollout support
+
 ## [1.0.0] - 2026-01-20
 
 ### Added
@@ -51,8 +78,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Built with Commander.js, @clack/prompts, and tsup
 - ESM-only package with Node.js >= 18 requirement
-- 191 automated tests (unit, integration, E2E)
+- 199 automated tests (unit, integration, E2E)
 - CI workflow for typecheck, test, and build validation
 
-[Unreleased]: https://github.com/raftlabs/raftstack/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/raftlabs/raftstack/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/raftlabs/raftstack/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/raftlabs/raftstack/releases/tag/v1.0.0
