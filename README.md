@@ -75,6 +75,7 @@ The wizard will:
 | File | Purpose |
 |------|---------|
 | `CONTRIBUTING.md` | Developer contribution guide |
+| `.github/QUICK_REFERENCE.md` | One-page workflow cheat sheet for developers |
 
 ## Commands
 
@@ -97,6 +98,21 @@ raftstack setup-protection
 **Requirements:**
 - GitHub CLI (`gh`) installed and authenticated
 - Admin access to the repository
+
+### `raftstack metrics`
+
+Analyze repository compliance with RaftStack conventions.
+
+```bash
+raftstack metrics
+```
+
+This command checks:
+- **Commit compliance** - Percentage of commits with task links
+- **Branch naming** - Percentage following naming conventions
+- **Overall compliance score** - Combined metrics
+
+Use during pilot rollout or ongoing maintenance to track team adoption.
 
 ## After Setup
 
@@ -281,6 +297,25 @@ chmod +x .husky/pre-push
 ### Files not being formatted
 
 Check your `.lintstagedrc.js` configuration and ensure the file patterns match your project structure.
+
+## Organization Rollout
+
+For deploying RaftStack across multiple projects in your organization, use the deployment helper script:
+
+```bash
+# Download and run
+curl -fsSL https://raw.githubusercontent.com/Raft-Labs/raftstack/main/scripts/deploy-to-project.sh -o deploy.sh
+chmod +x deploy.sh
+
+# Deploy to a project
+./deploy.sh /path/to/project https://app.asana.com/0/project/task
+```
+
+The script:
+1. Creates a `chore/setup-raftstack` branch
+2. Runs `raftstack init`
+3. Commits with proper message format
+4. Pushes and creates a PR (if `gh` CLI is available)
 
 ## Contributing
 
