@@ -15,35 +15,40 @@
 
 ---
 
-## Current Status: Ready for v1.0.0 Release
+## Current Status: v1.2.0 Released (Automated)
 
-> All development work complete. Package ready for npm publication.
+> All development work complete. Automated versioning working. NPM publish pending.
 
 ### What's Complete
 
-- **3.1 Manual Testing** - ✅ Complete
-  - 15 E2E tests covering all project types (NX, Turbo, pnpm-workspace, single)
-  - Asana integration tested
-  - AI review tools (CodeRabbit/Copilot) tested
-  - File permissions verified
-  - Idempotency tested (running init twice)
-- **3.2 Documentation** - ✅ Complete
-  - README.md with features, Claude Code skills, ESLint section, troubleshooting
-  - CHANGELOG.md with v1.0.0 release notes
-- **3.3 Release Preparation** - ✅ Complete
-  - All 199 tests passing
-  - TypeScript compilation clean
-  - Build produces 57KB bundled CLI
-  - Package verified with `pnpm pack`
-  - v1.0.0 tag exists on GitHub
+- **All Code Features** - ✅ Complete
+  - 14 generators covering all goal.md requirements
+  - 5 Claude Code skills (React, Backend, Database, SEO, Code Quality)
+  - 3 CLI commands (init, setup-protection, metrics)
+  - 199 tests passing (unit, integration, E2E)
+
+- **Automated Versioning** - ✅ Working
+  - standard-version configured with conventional commits
+  - Release workflow auto-bumps version on push to main
+  - CHANGELOG.md auto-generated
+  - v1.2.0 tag created automatically
+
+- **Phase 4/5 Support Tooling** - ✅ Complete
+  - `raftstack metrics` command for compliance tracking
+  - Quick Reference guide generator
+  - Deployment helper script
 
 ### Next Action Required
 
-**Manual npm publish:**
+**Configure NPM_TOKEN for automated publishing:**
+1. Go to GitHub repo **Settings > Secrets > Actions**
+2. Add `NPM_TOKEN` with your npm access token (requires @raftlabs org access)
+3. Create a GitHub release or push to main to trigger publish
+
+**Or publish manually:**
 ```bash
-npm login           # Authenticate with npm (requires @raftlabs org access)
-npm whoami          # Verify login
-pnpm publish --no-git-checks  # Publish v1.0.0
+npm login
+pnpm publish --no-git-checks
 ```
 
 After publishing, verify with:
@@ -145,3 +150,11 @@ pnpm dlx @raftlabs/raftstack init
 - Added Quick Reference guide generator (.github/QUICK_REFERENCE.md)
 - Added deployment helper script (scripts/deploy-to-project.sh)
 - Updated README with new features and org rollout documentation
+
+**2026-01-20:** Automated versioning complete:
+- Configured standard-version with conventional commits
+- Created release.yml workflow (auto-bumps version on push to main)
+- Created publish.yml workflow (publishes to npm on release)
+- v1.2.0 auto-created with full changelog
+- Added VERSION_COMMANDS.md quick reference
+- Only remaining step: Configure NPM_TOKEN secret for automated publishing
