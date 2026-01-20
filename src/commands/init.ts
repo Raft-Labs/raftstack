@@ -16,6 +16,7 @@ import {
   generateContributing,
   generatePrettier,
   generateClaudeSkills,
+  generateQuickReference,
 } from "../generators/index.js";
 import {
   mergeDevDependencies,
@@ -151,6 +152,7 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
 
     // Documentation
     results.push(await generateContributing(targetDir, !!config.asanaBaseUrl));
+    results.push(await generateQuickReference(targetDir));
 
     // Claude Code skills for AI-assisted development
     results.push(await generateClaudeSkills(targetDir));

@@ -13,3 +13,4 @@ export { generateContributing } from "./contributing.js";
 export { generatePrettier } from "./prettier.js";
 export { generateClaudeSkills } from "./claude-skills.js";
 export { generateEslint, getEslintDependencies } from "./eslint.js";
+export { generateQuickReference } from "./quick-reference.js";
