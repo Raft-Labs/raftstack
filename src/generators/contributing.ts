@@ -106,6 +106,24 @@ ${asanaSection}
 5. Address any feedback
 6. Merge once approved and all checks pass
 
+### PR Size Guidelines
+
+Keep pull requests small and focused for faster reviews:
+
+| Size | Lines Changed | Review Time |
+|------|---------------|-------------|
+| XS | 0-10 lines | Minutes |
+| S | 11-50 lines | < 30 min |
+| M | 51-200 lines | < 1 hour |
+| L | 201-400 lines | 1-2 hours |
+| XL | 400+ lines | Needs justification |
+
+**Target: < 400 lines per PR**
+
+If your PR is large:
+- Consider splitting it into smaller, logical PRs
+- Explain in the description why it can't be split
+
 ## Code Quality
 
 Before committing, the following checks run automatically:

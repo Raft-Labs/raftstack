@@ -56,16 +56,17 @@ const config = {
             hasAsanaLink,
             hasAsanaLink
               ? null
-              : 'Consider adding an Asana task link in the commit body or footer',
+              : 'Consider adding an Asana task link in the commit body or footer (e.g., Task: https://app.asana.com/0/...)',
           ];
         },
       },
     },
   ],
-  // Custom rules - level 1 means WARNING (shows message but doesn't block commit)
-  // Change to level 2 if you want to BLOCK commits without Asana links
-  // 'asana-task-link': [1, 'always'],
 };
+
+// Enable the Asana task link rule as a WARNING (level 1)
+// Change to level 2 if you want to BLOCK commits without Asana links
+config.rules['asana-task-link'] = [1, 'always'];
 
 module.exports = config;
 `;
