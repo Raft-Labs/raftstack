@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import type { GeneratorResult, ProjectType } from "../types/config.js";
+import type { GeneratorResult, PackageManagerInfo, ProjectType } from "../types/config.js";
 import { ensureDir, writeFileSafe } from "../utils/file-system.js";
 
 /**
@@ -8,7 +8,8 @@ import { ensureDir, writeFileSafe } from "../utils/file-system.js";
 function getPRChecksWorkflow(
   projectType: ProjectType,
   usesTypeScript: boolean,
-  usesEslint: boolean
+  usesEslint: boolean,
+  pm: PackageManagerInfo
 ): string {
   const steps: string[] = [];
 
@@ -23,60 +24,62 @@ function getPRChecksWorkflow(
         with:
           node-version: '20'`);
 
-  // Setup pnpm
-  steps.push(`
+  // Setup pnpm (only if needed)
+  if (pm.needsSetupAction) {
+    steps.push(`
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 9`);
+  }
 
   // Install dependencies
   steps.push(`
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile`);
+        run: ${pm.installFrozen}`);
 
   // TypeScript check
   if (usesTypeScript) {
     steps.push(`
       - name: Type check
-        run: pnpm typecheck`);
+        run: ${pm.run} typecheck`);
   }
 
   // ESLint
   if (usesEslint) {
     steps.push(`
       - name: Lint
-        run: pnpm lint`);
+        run: ${pm.run} lint`);
   }
 
   // Build (for NX/Turbo, use their commands)
   if (projectType === "nx") {
     steps.push(`
       - name: Build
-        run: pnpm nx affected --target=build --parallel=3`);
+        run: ${pm.run} nx affected --target=build --parallel=3`);
   } else if (projectType === "turbo") {
     steps.push(`
       - name: Build
-        run: pnpm turbo build`);
+        run: ${pm.run} turbo build`);
   } else {
     steps.push(`
       - name: Build
-        run: pnpm build`);
+        run: ${pm.run} build`);
   }
 
   // Tests
   if (projectType === "nx") {
     steps.push(`
       - name: Test
-        run: pnpm nx affected --target=test --parallel=3`);
+        run: ${pm.run} nx affected --target=test --parallel=3`);
   } else if (projectType === "turbo") {
     steps.push(`
       - name: Test
-        run: pnpm turbo test`);
+        run: ${pm.run} turbo test`);
   } else {
     steps.push(`
       - name: Test
-        run: pnpm test`);
+        run: ${pm.run} test`);
   }
 
   return `name: PR Checks
@@ -105,7 +108,8 @@ export async function generateGitHubWorkflows(
   targetDir: string,
   projectType: ProjectType,
   usesTypeScript: boolean,
-  usesEslint: boolean
+  usesEslint: boolean,
+  pm: PackageManagerInfo
 ): Promise<GeneratorResult> {
   const result: GeneratorResult = {
     created: [],
@@ -121,7 +125,7 @@ export async function generateGitHubWorkflows(
   const prChecksPath = join(workflowsDir, "pr-checks.yml");
   const writeResult = await writeFileSafe(
     prChecksPath,
-    getPRChecksWorkflow(projectType, usesTypeScript, usesEslint),
+    getPRChecksWorkflow(projectType, usesTypeScript, usesEslint, pm),
     { backup: true }
   );
 

@@ -1,11 +1,11 @@
 import { join } from "node:path";
-import type { GeneratorResult } from "../types/config.js";
+import type { GeneratorResult, PackageManagerInfo } from "../types/config.js";
 import { writeFileSafe } from "../utils/file-system.js";
 
 /**
  * Get CONTRIBUTING.md content
  */
-function getContributingContent(hasAsana: boolean): string {
+function getContributingContent(hasAsana: boolean, pm: PackageManagerInfo): string {
   const asanaSection = hasAsana
     ? `
 ## Linking to Asana
@@ -33,7 +33,7 @@ Thank you for your interest in contributing! This document outlines our developm
 ## Getting Started
 
 1. Clone the repository
-2. Install dependencies: \`pnpm install\`
+2. Install dependencies: \`${pm.install}\`
 3. Create a new branch following our naming convention
 
 ## Branch Naming Convention
@@ -58,7 +58,7 @@ We use structured branch names to keep our repository organized:
 We follow [Conventional Commits](https://www.conventionalcommits.org/). Use the interactive commit tool:
 
 \`\`\`bash
-pnpm commit
+${pm.run} commit
 \`\`\`
 
 ### Commit Types
@@ -145,7 +145,8 @@ If you have questions, please open an issue or reach out to the maintainers.
  */
 export async function generateContributing(
   targetDir: string,
-  hasAsana: boolean
+  hasAsana: boolean,
+  pm: PackageManagerInfo
 ): Promise<GeneratorResult> {
   const result: GeneratorResult = {
     created: [],
@@ -157,7 +158,7 @@ export async function generateContributing(
   const contributingPath = join(targetDir, "CONTRIBUTING.md");
   const writeResult = await writeFileSafe(
     contributingPath,
-    getContributingContent(hasAsana),
+    getContributingContent(hasAsana, pm),
     { backup: true }
   );
 

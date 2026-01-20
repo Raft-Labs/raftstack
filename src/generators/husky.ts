@@ -1,46 +1,46 @@
 import { join } from "node:path";
-import type { GeneratorResult, ProjectType } from "../types/config.js";
+import type { GeneratorResult, PackageManagerInfo, ProjectType } from "../types/config.js";
 import { ensureDir, writeFileSafe } from "../utils/file-system.js";
 
 /**
  * Generate Husky pre-commit hook
  */
-function getPreCommitHook(projectType: ProjectType): string {
+function getPreCommitHook(projectType: ProjectType, pm: PackageManagerInfo): string {
   // NX uses its own lint-staged orchestration
   if (projectType === "nx") {
     return `#!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npx lint-staged
+${pm.exec} lint-staged
 `;
   }
 
   return `#!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npx lint-staged
+${pm.exec} lint-staged
 `;
 }
 
 /**
  * Generate Husky commit-msg hook for commitlint
  */
-function getCommitMsgHook(): string {
+function getCommitMsgHook(pm: PackageManagerInfo): string {
   return `#!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npx --no -- commitlint --edit "$1"
+${pm.exec} --no -- commitlint --edit "$1"
 `;
 }
 
 /**
  * Generate Husky pre-push hook for branch validation
  */
-function getPrePushHook(): string {
+function getPrePushHook(pm: PackageManagerInfo): string {
   return `#!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-npx validate-branch-name
+${pm.exec} validate-branch-name
 `;
 }
 
@@ -49,7 +49,8 @@ npx validate-branch-name
  */
 export async function generateHuskyHooks(
   targetDir: string,
-  projectType: ProjectType
+  projectType: ProjectType,
+  pm: PackageManagerInfo
 ): Promise<GeneratorResult> {
   const result: GeneratorResult = {
     created: [],
@@ -65,7 +66,7 @@ export async function generateHuskyHooks(
   const preCommitPath = join(huskyDir, "pre-commit");
   const preCommitResult = await writeFileSafe(
     preCommitPath,
-    getPreCommitHook(projectType),
+    getPreCommitHook(projectType, pm),
     { executable: true, backup: true }
   );
   if (preCommitResult.created) {
@@ -79,7 +80,7 @@ export async function generateHuskyHooks(
   const commitMsgPath = join(huskyDir, "commit-msg");
   const commitMsgResult = await writeFileSafe(
     commitMsgPath,
-    getCommitMsgHook(),
+    getCommitMsgHook(pm),
     { executable: true, backup: true }
   );
   if (commitMsgResult.created) {
@@ -91,7 +92,7 @@ export async function generateHuskyHooks(
 
   // Pre-push hook
   const prePushPath = join(huskyDir, "pre-push");
-  const prePushResult = await writeFileSafe(prePushPath, getPrePushHook(), {
+  const prePushResult = await writeFileSafe(prePushPath, getPrePushHook(pm), {
     executable: true,
     backup: true,
   });

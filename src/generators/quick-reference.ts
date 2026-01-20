@@ -1,12 +1,13 @@
 import { join } from "node:path";
 import { writeFileSafe } from "../utils/file-system.js";
-import type { GeneratorResult } from "../types/config.js";
+import type { GeneratorResult, PackageManagerInfo } from "../types/config.js";
 
 /**
  * Generate Quick Reference guide for developers
  */
 export async function generateQuickReference(
-  targetDir: string
+  targetDir: string,
+  pm: PackageManagerInfo
 ): Promise<GeneratorResult> {
   const result: GeneratorResult = {
     created: [],
@@ -38,7 +39,7 @@ git checkout -b hotfix/payment-timeout
 
 \`\`\`bash
 # Use the interactive commit tool
-pnpm commit
+${pm.run} commit
 \`\`\`
 
 This will prompt you for:
@@ -101,16 +102,16 @@ Before submitting:
 
 \`\`\`bash
 # Interactive commit
-pnpm commit
+${pm.run} commit
 
 # Check compliance metrics
-pnpm dlx @raftlabs/raftstack metrics
+${pm.exec} @raftlabs/raftstack metrics
 
 # Run linting
-pnpm lint
+${pm.run} lint
 
 # Run tests
-pnpm test
+${pm.run} test
 \`\`\`
 
 ---
