@@ -15,10 +15,10 @@ RaftStack is a CLI tool that enforces consistent Git workflows, commit conventio
 
 | Phase | Name | Status | Description |
 |-------|------|--------|-------------|
-| 0 | [Stabilization](./plans/phase-0-stabilization.md) | Not Started | Fix skills bundling, add CI, validate publishing |
-| 1 | [Testing](./plans/phase-1-testing.md) | Not Started | Comprehensive test coverage (>80%) |
-| 2 | [Features](./plans/phase-2-features.md) | Not Started | Complete remaining features from goal.md |
-| 3 | [Pre-Release](./plans/phase-3-pre-release.md) | Not Started | Final validation and v1.0.0 release |
+| 0 | [Stabilization](./plans/phase-0-stabilization.md) | ✅ Complete | Skills bundling, CI workflow |
+| 1 | [Testing](./plans/phase-1-testing.md) | ✅ Complete | 191 tests (unit, integration, E2E) |
+| 2 | [Features](./plans/phase-2-features.md) | ✅ Complete | ESLint generator, enhanced branch protection |
+| 3 | [Pre-Release](./plans/phase-3-pre-release.md) | 🔄 In Progress | Documentation complete, awaiting NPM_TOKEN |
 | 4 | [Pilot](./plans/phase-4-pilot.md) | Not Started | Deploy to one real project for validation |
 | 5 | [Org Rollout](./plans/phase-5-org-rollout.md) | Not Started | Deploy to all RaftLabs projects |
 
@@ -28,19 +28,24 @@ RaftStack is a CLI tool that enforces consistent Git workflows, commit conventio
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| CLI Framework | Complete | Commander.js + @clack/prompts |
-| 13 Generators | Complete | husky, commitlint, lint-staged, etc. |
-| 5 Claude Skills | Complete | React, Backend, Database, SEO, Code Quality |
-| Init Command | Complete | Full orchestration flow |
-| Setup-Protection | Complete | GitHub API via gh CLI |
-| Unit Tests | Partial | Only 2 test files (~30 tests) |
-| Skills Bundling | **Not Done** | `.claude/` not in package.json files |
-| CI Workflow | **Not Done** | Only publish.yml exists |
-| Pilot Rollout | Not Started | |
+| CLI Framework | ✅ Complete | Commander.js + @clack/prompts |
+| 14 Generators | ✅ Complete | husky, commitlint, lint-staged, eslint, etc. |
+| 5 Claude Skills | ✅ Complete | React, Backend, Database, SEO, Code Quality |
+| Init Command | ✅ Complete | Full orchestration flow |
+| Setup-Protection | ✅ Complete | Multi-branch, merge strategies via gh CLI |
+| Unit Tests | ✅ Complete | 165 tests across 14 test files |
+| Integration Tests | ✅ Complete | 11 tests |
+| E2E Tests | ✅ Complete | 15 tests across 4 project types |
+| Skills Bundling | ✅ Complete | `.claude/skills/` in package.json files |
+| CI Workflow | ✅ Complete | `ci.yml` + `publish.yml` |
+| Documentation | ✅ Complete | README, CHANGELOG, CONTRIBUTING |
+| NPM Publishing | ⏳ Blocked | Requires NPM_TOKEN secret |
 
-### Critical Gap
+### Next Steps
 
-Skills exist but won't be included in npm package (missing from `files` array). This is the top priority for Phase 0.
+1. Configure NPM_TOKEN in GitHub repository secrets
+2. Push tags to trigger publish workflow
+3. Test global installation: `pnpm dlx @raftlabs/raftstack init`
 
 ---
 
