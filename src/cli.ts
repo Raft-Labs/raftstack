@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { runInit } from "./commands/init.js";
 import { runSetupProtection } from "./commands/setup-protection.js";
+import { runMetrics } from "./commands/metrics.js";
 
 const program = new Command();
 
@@ -23,6 +24,13 @@ program
   .description("Configure GitHub branch protection rules via API")
   .action(async () => {
     await runSetupProtection(process.cwd());
+  });
+
+program
+  .command("metrics")
+  .description("Analyze repository compliance with RaftStack conventions")
+  .action(async () => {
+    await runMetrics(process.cwd());
   });
 
 program.parse();
