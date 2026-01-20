@@ -15,9 +15,9 @@
 
 ---
 
-## Current Status: v1.2.0 Released (Automated)
+## Current Status: v1.2.1 Released
 
-> All development work complete. Automated versioning working. NPM publish pending.
+> All development work complete. Bug fix for Claude skills path resolution released.
 
 ### What's Complete
 
@@ -158,3 +158,8 @@ pnpm dlx @raftlabs/raftstack init
 - v1.2.0 auto-created with full changelog
 - Added VERSION_COMMANDS.md quick reference
 - Only remaining step: Configure NPM_TOKEN secret for automated publishing
+
+**2026-01-20:** v1.2.1 released:
+- Fixed Claude skills path resolution bug in `getPackageSkillsDir()`
+- tsup bundles to single dist/cli.js, so path traversal changed from 2 levels to 1
+- Skills now correctly copied to target projects during init
