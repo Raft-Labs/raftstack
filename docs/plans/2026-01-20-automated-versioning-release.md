@@ -778,19 +778,19 @@ git commit -m "docs: add version commands quick reference"
 
 ### Checklist
 
-- [ ] `standard-version` installed and configured
-- [ ] `.versionrc.json` created with commit types
-- [ ] Version scripts added to package.json
-- [ ] Release workflow created and tested
-- [ ] Publish workflow updated to trigger on releases
-- [ ] CI workflow skips release commits
-- [ ] Documentation added to README
-- [ ] RELEASING.md guide created
-- [ ] VERSION_COMMANDS.md quick reference created
-- [ ] GitHub repository settings configured
-- [ ] First automated release successful
-- [ ] npm package published with new version
-- [ ] CHANGELOG.md generated correctly
+- [x] `standard-version` installed and configured
+- [x] `.versionrc.json` created with commit types
+- [x] Version scripts added to package.json
+- [x] Release workflow created and tested
+- [x] Publish workflow updated to trigger on releases
+- [x] CI workflow skips release commits
+- [x] Documentation added to README
+- [x] RELEASING.md guide created
+- [x] VERSION_COMMANDS.md quick reference created
+- [ ] GitHub repository settings configured (requires NPM_TOKEN secret)
+- [x] First automated release successful (v1.2.0)
+- [ ] npm package published with new version (blocked on NPM_TOKEN)
+- [x] CHANGELOG.md generated correctly
 
 ### Success Criteria
 

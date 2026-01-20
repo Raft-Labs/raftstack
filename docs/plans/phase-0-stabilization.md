@@ -8,9 +8,9 @@ Ensure existing code is production-ready and skills are bundled correctly in the
 
 ## Success Criteria
 
-- [ ] Skills included in `npm pack` output
-- [ ] CI passes on all PRs
-- [ ] Beta version installable from npm
+- [x] Skills included in `npm pack` output
+- [x] CI passes on all PRs
+- [ ] Beta version installable from npm (blocked on NPM_TOKEN)
 
 ---
 
@@ -22,14 +22,14 @@ Ensure existing code is production-ready and skills are bundled correctly in the
 
 #### Tasks
 
-- [ ] Add `.claude/` to `package.json` files array
-- [ ] Create `src/generators/claude-skills.ts`:
+- [x] Add `.claude/` to `package.json` files array
+- [x] Create `src/generators/claude-skills.ts`:
   - Copy `.claude/skills/` to target project
   - Handle existing `.claude/` directory
   - Return `GeneratorResult` with created/modified files
-- [ ] Export from `src/generators/index.ts`
-- [ ] Integrate into `src/commands/init.ts`
-- [ ] Verify with `pnpm pack:test`
+- [x] Export from `src/generators/index.ts`
+- [x] Integrate into `src/commands/init.ts`
+- [x] Verify with `pnpm pack:test`
 
 #### Files to Modify
 
@@ -63,11 +63,11 @@ tar -tzf raftlabs-raftstack-*.tgz | grep ".claude"
 
 #### Tasks
 
-- [ ] Create `.github/workflows/ci.yml`:
+- [x] Create `.github/workflows/ci.yml`:
   - Trigger: PR to main
   - Jobs: typecheck, test, build
   - Node version: 20
-- [ ] Test workflow passes
+- [x] Test workflow passes
 
 #### File to Create
 
@@ -116,9 +116,9 @@ jobs:
 
 #### Tasks
 
-- [ ] Verify NPM_TOKEN is configured
-- [ ] Publish beta version: `v1.0.0-beta.1`
-- [ ] Test installation works
+- [ ] Verify NPM_TOKEN is configured (requires user action)
+- [ ] Publish beta version: `v1.0.0-beta.1` (blocked on NPM_TOKEN)
+- [ ] Test installation works (blocked on publish)
 
 #### Verification
 
