@@ -18,7 +18,7 @@ RaftStack is a CLI tool that enforces consistent Git workflows, commit conventio
 | 0 | [Stabilization](./plans/phase-0-stabilization.md) | ✅ Complete | Skills bundling, CI workflow |
 | 1 | [Testing](./plans/phase-1-testing.md) | ✅ Complete | 191 tests (unit, integration, E2E) |
 | 2 | [Features](./plans/phase-2-features.md) | ✅ Complete | ESLint generator, enhanced branch protection |
-| 3 | [Pre-Release](./plans/phase-3-pre-release.md) | 🔄 In Progress | Documentation complete, awaiting NPM_TOKEN |
+| 3 | [Pre-Release](./plans/phase-3-pre-release.md) | ✅ Ready | All dev complete, awaiting npm publish |
 | 4 | [Pilot](./plans/phase-4-pilot.md) | Not Started | Deploy to one real project for validation |
 | 5 | [Org Rollout](./plans/phase-5-org-rollout.md) | Not Started | Deploy to all RaftLabs projects |
 
@@ -39,13 +39,17 @@ RaftStack is a CLI tool that enforces consistent Git workflows, commit conventio
 | Skills Bundling | ✅ Complete | `.claude/skills/` in package.json files |
 | CI Workflow | ✅ Complete | `ci.yml` + `publish.yml` |
 | Documentation | ✅ Complete | README, CHANGELOG, CONTRIBUTING |
-| NPM Publishing | ⏳ Blocked | Requires NPM_TOKEN secret |
+| NPM Publishing | ⏳ Action Required | Manual publish needed |
 
 ### Next Steps
 
-1. Configure NPM_TOKEN in GitHub repository secrets
-2. Push tags to trigger publish workflow
-3. Test global installation: `pnpm dlx @raftlabs/raftstack init`
+1. **Publish to npm** (manual action required):
+   ```bash
+   npm login           # Requires @raftlabs org access
+   pnpm publish --no-git-checks
+   ```
+2. Verify installation: `pnpm dlx @raftlabs/raftstack init`
+3. Proceed to Phase 4: Pilot deployment
 
 ---
 
