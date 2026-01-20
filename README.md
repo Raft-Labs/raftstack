@@ -205,11 +205,86 @@ RaftStack supports optional AI code review integration:
 - **CodeRabbit**: Generates `.coderabbit.yaml` configuration
 - **GitHub Copilot**: Adds workflow for Copilot code review
 
+## Claude Code Skills
+
+RaftStack bundles AI-assisted development skills for Claude Code. When initialized, these skills are copied to `.claude/skills/`:
+
+| Skill | Purpose |
+|-------|---------|
+| `react` | React 19+ patterns, SOLID components, performance optimization |
+| `backend` | Clean architecture for serverless/Hono/Express backends |
+| `database` | PostgreSQL/Drizzle ORM schema design and indexing |
+| `seo` | Technical SEO for Next.js/React applications |
+| `code-quality` | Universal readability rules (30-line functions, naming, etc.) |
+
+These skills automatically apply best practices when using Claude Code for development.
+
+## ESLint Configuration (Optional)
+
+RaftStack can generate ESLint 9 flat config for projects without existing ESLint setup:
+
+- **TypeScript support** with `typescript-eslint`
+- **React support** auto-detected and configured
+- **Modern flat config** format (ESLint 9+)
+- **Skips** if ESLint is already configured
+
+To add ESLint to the init flow, the generator automatically detects if ESLint is needed.
+
 ## Requirements
 
 - Node.js >= 18
 - Git repository initialized
 - Package manager: pnpm, npm, or yarn
+
+## Troubleshooting
+
+### Husky hooks not running
+
+```bash
+# Reinstall husky
+pnpm exec husky
+
+# Make hooks executable
+chmod +x .husky/*
+```
+
+### Commit validation failing
+
+Check your commit message format:
+```bash
+# Use the interactive wizard
+pnpm commit
+
+# Or ensure format: type(scope): subject
+git commit -m "feat(auth): add login page"
+```
+
+### Branch name validation failing
+
+Ensure your branch follows the naming convention:
+```bash
+# Correct
+git checkout -b feature/my-feature
+
+# Incorrect
+git checkout -b my-feature  # Missing prefix
+```
+
+### Permission denied on hooks
+
+```bash
+chmod +x .husky/pre-commit
+chmod +x .husky/commit-msg
+chmod +x .husky/pre-push
+```
+
+### Files not being formatted
+
+Check your `.lintstagedrc.js` configuration and ensure the file patterns match your project structure.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
 
 ## License
 
