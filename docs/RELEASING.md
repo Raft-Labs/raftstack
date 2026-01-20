@@ -8,6 +8,18 @@
 2. CI tests passing
 3. `NPM_TOKEN` secret configured in GitHub repository settings
 
+### Repository Setup (One-time)
+
+1. **NPM_TOKEN Secret**
+   - Settings → Secrets → Actions → New repository secret
+   - Name: `NPM_TOKEN`
+   - Value: Your npm access token with publish permissions
+
+2. **GitHub Actions Permissions**
+   - Settings → Actions → General → Workflow permissions
+   - Select: "Read and write permissions"
+   - Enable: "Allow GitHub Actions to create and approve pull requests"
+
 ### Release Triggers
 
 The release happens automatically when you push to `main`:
