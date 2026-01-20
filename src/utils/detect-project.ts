@@ -148,6 +148,26 @@ export async function hasPrettier(
 }
 
 /**
+ * Check if project uses React
+ */
+export async function hasReact(
+  targetDir: string = process.cwd()
+): Promise<boolean> {
+  try {
+    const pkgPath = join(targetDir, "package.json");
+    if (existsSync(pkgPath)) {
+      const content = await readFile(pkgPath, "utf-8");
+      const pkg = JSON.parse(content);
+      const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+      return "react" in deps || "react-dom" in deps;
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return false;
+}
+
+/**
  * Get a human-readable description of the project type
  */
 export function getProjectTypeDescription(type: ProjectType): string {

@@ -69,8 +69,8 @@ describe("Generators Integration", () => {
       results.push(await generateContributing(TEST_DIR, false));
       results.push(await generateClaudeSkills(TEST_DIR));
 
-      // Collect all created files
-      const allCreated = results.flatMap((r) => r.created);
+      // Verify generator results are collected
+      expect(results.length).toBeGreaterThan(0);
 
       // Verify core files exist
       expect(existsSync(join(TEST_DIR, ".husky", "pre-commit"))).toBe(true);

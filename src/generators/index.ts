@@ -12,3 +12,4 @@ export { generateBranchProtectionDocs } from "./branch-protection.js";
 export { generateContributing } from "./contributing.js";
 export { generatePrettier } from "./prettier.js";
 export { generateClaudeSkills } from "./claude-skills.js";
+export { generateEslint, getEslintDependencies } from "./eslint.js";
