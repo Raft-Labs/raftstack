@@ -1,0 +1,9 @@
+{
+  "name": "nx-test-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "nx build",
+    "test": "nx test"
+  }
+}
