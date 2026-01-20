@@ -10,8 +10,9 @@ import { ensureDir, backupFile } from "../utils/file-system.js";
  */
 function getPackageSkillsDir(): string {
   // In ESM, we use import.meta.url to find the package location
+  // tsup bundles everything into dist/cli.js, so we only need to go up 1 level
   const currentFilePath = fileURLToPath(import.meta.url);
-  const packageRoot = join(dirname(currentFilePath), "..", "..");
+  const packageRoot = join(dirname(currentFilePath), "..");
   return join(packageRoot, ".claude", "skills");
 }
 
