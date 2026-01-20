@@ -1,11 +1,77 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [1.2.0](https://github.com/Raft-Labs/raftstack/compare/v1.0.0...v1.2.0) (2026-01-20)
 
-## [Unreleased]
+
+### Features
+
+* add backend skill for Claude Code ([a5a75bf](https://github.com/Raft-Labs/raftstack/commit/a5a75bf59572a5878d8faf27c3c4d59863d52478))
+* add code-quality skill for Claude Code ([a1a5ac9](https://github.com/Raft-Labs/raftstack/commit/a1a5ac9f098f9876fe81bfa3d812160a26909b79))
+* add database skill for Claude Code ([bccb704](https://github.com/Raft-Labs/raftstack/commit/bccb7040313360dc387b9964cb21b8b775d91a23))
+* add react skill for Claude Code ([4507c00](https://github.com/Raft-Labs/raftstack/commit/4507c00e63fe60d416783cd4245dafc0088e1a52))
+* add seo skill for Claude Code ([51054ee](https://github.com/Raft-Labs/raftstack/commit/51054eefae10408149fd0f0bddb1913c40afd9e1))
+* **cli:** add claude skills generator for bundling skills in npm package ([8131683](https://github.com/Raft-Labs/raftstack/commit/81316838e55a0541280c1837a145b2b70a1684db))
+* **cli:** add metrics command for compliance analysis ([0cff3db](https://github.com/Raft-Labs/raftstack/commit/0cff3db14d5730d89c8f5c2e31161e0548067926))
+* **cli:** enhance branch protection with multi-branch and merge strategy support ([084f5eb](https://github.com/Raft-Labs/raftstack/commit/084f5eb31fb760d92d373cf02d1041fd99ee0eb1))
+* **generator:** add quick reference guide generator ([c5515a8](https://github.com/Raft-Labs/raftstack/commit/c5515a8d3141f43645ff0257edca6d9e032c844b))
+* **generators:** add ESLint 9+ flat config generator ([0d5c246](https://github.com/Raft-Labs/raftstack/commit/0d5c246ff3497a2f82dec70ada56d3956e5a01b4))
+
+
+### Bug Fixes
+
+* **generators:** enable Asana task link rule and add PR size guidelines ([56e65c5](https://github.com/Raft-Labs/raftstack/commit/56e65c5a16de41d72edfca2125ca573e97902f64))
+
+
+### Code Refactoring
+
+* **skills:** enhance backend skill with Context7 research ([cdbf90a](https://github.com/Raft-Labs/raftstack/commit/cdbf90a30ef0b64fed8e6f2dd646708216585d73))
+* **skills:** enhance backend skill with Context7 research ([92d97dd](https://github.com/Raft-Labs/raftstack/commit/92d97dd1a31cec292c508082896a00e674bcafa2))
+* **skills:** enhance code-quality skill with automated enforcement ([34146da](https://github.com/Raft-Labs/raftstack/commit/34146da35bb52156f1317a0f92bd752dd436f921))
+* **skills:** enhance database skill with Context7 research ([e83e73d](https://github.com/Raft-Labs/raftstack/commit/e83e73da928d26d16868fc1dd8f8a528a4fa679f))
+* **skills:** enhance react skill with Context7 research ([9e6edc7](https://github.com/Raft-Labs/raftstack/commit/9e6edc7eb886508d25ac7b3a8cda481841d6a3cf))
+* **skills:** enhance seo skill with Context7 research ([16c6a26](https://github.com/Raft-Labs/raftstack/commit/16c6a261d5fb9c1949c9570eb40de68982027073))
+
+
+### Build System
+
+* add standard-version for automated versioning ([63d84ac](https://github.com/Raft-Labs/raftstack/commit/63d84ac47b3cda97e6062c95e0dc640b59f9cc18))
+
+
+### Tests
+
+* add unit tests for quick-reference generator ([c92a170](https://github.com/Raft-Labs/raftstack/commit/c92a1709b777d2c895bdac3aba0f56ab857e0979))
+* **e2e:** add E2E tests with project fixtures ([f8dcf0e](https://github.com/Raft-Labs/raftstack/commit/f8dcf0e667dd0cd6b173060845589ac3920db96a))
+* **generators:** add unit tests for 8 generators ([772a560](https://github.com/Raft-Labs/raftstack/commit/772a5604073495f5a8d9eecfcf3ef90d24fc9de9))
+* **generators:** complete unit tests for all 13 generators ([f74ef09](https://github.com/Raft-Labs/raftstack/commit/f74ef0926b36e184dd28216963a1ae7a62fadfa5))
+* **integration:** add integration tests for generators ([b7be81c](https://github.com/Raft-Labs/raftstack/commit/b7be81c22b0e18746beaa0328b43db7207a7ed65))
+
+
+### Documentation
+
+* add comprehensive README and CHANGELOG for v1.0.0 ([c00362c](https://github.com/Raft-Labs/raftstack/commit/c00362c412a5cd64ea2a40c457e6ac1a9a575210))
+* add metrics command and org rollout documentation ([cecf3ab](https://github.com/Raft-Labs/raftstack/commit/cecf3ab2d47383aa91c3727173a375f6500e44ec))
+* add project strategy and goals documentation ([7621d75](https://github.com/Raft-Labs/raftstack/commit/7621d75a5535fc2224c5de0f9d88b54f0966e59b))
+* add release process guide ([0a658ab](https://github.com/Raft-Labs/raftstack/commit/0a658abdf871f3c7712416ce7ce07f1c59f1c82f))
+* add roadmap, progress tracking, and phase plans ([890015d](https://github.com/Raft-Labs/raftstack/commit/890015d2900157bda35b4c7a2ddc7072e6ec9800))
+* add versioning and release documentation ([f0f7687](https://github.com/Raft-Labs/raftstack/commit/f0f7687faa81110babe5e3e4a303a5f37f9121f2))
+* enhance CLAUDE.md with architecture and skills ([c615635](https://github.com/Raft-Labs/raftstack/commit/c6156354d7009a76e268f12505ddd99831812ee4))
+* mark Phase 3 as ready for release ([2ec2932](https://github.com/Raft-Labs/raftstack/commit/2ec293289077332fa561585c540a5a7232c98482))
+* update progress tracking for Phase 3 ([40805ea](https://github.com/Raft-Labs/raftstack/commit/40805eaa267c197190af00c95adb863b0094cd37))
+* update progress with Phase 4/5 tooling completion ([f1dfce8](https://github.com/Raft-Labs/raftstack/commit/f1dfce8a3cde789b16b8e84cfa6eee3621321ca6))
+* update PROGRESS.md with Phase 1 completion ([6a542fe](https://github.com/Raft-Labs/raftstack/commit/6a542fef5a17fc582b8e9201bf0c104f7272b244))
+* update PROGRESS.md with Phase 1.1 completion ([f99a2dc](https://github.com/Raft-Labs/raftstack/commit/f99a2dcdc1e29e8d1ad55ac82271d374273ba8aa))
+* update PROGRESS.md with Phase 2 completion ([bbd90ec](https://github.com/Raft-Labs/raftstack/commit/bbd90ec7d66b67f68916c74c7aabb4b99441d261))
+* update roadmap with current completion status ([0521937](https://github.com/Raft-Labs/raftstack/commit/0521937b6784a054c3a8ea3e01d9b0bda1ba9d88))
+
+
+### CI/CD
+
+* add automated release workflow ([1a5bbcc](https://github.com/Raft-Labs/raftstack/commit/1a5bbccf4eb519efc47ee6ad5a629417dd490743))
+* add CI workflow for PR and push validation ([44da447](https://github.com/Raft-Labs/raftstack/commit/44da447ba0b155ba46c4793fd0cadf17b59fd27e))
+* skip CI on automated release commits ([7bbaaf4](https://github.com/Raft-Labs/raftstack/commit/7bbaaf45ea56f372352126c9088aac019b7234e3))
+* update publish workflow to trigger on GitHub releases ([cc1e823](https://github.com/Raft-Labs/raftstack/commit/cc1e82361ddce586a57616fb14d91c40e2caacc6))
 
 ## [1.1.0] - 2026-01-20
 
