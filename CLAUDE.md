@@ -24,40 +24,97 @@ pnpm test:run
 pnpm test src/utils/__tests__/detect-project.test.ts
 ```
 
-## Architecture
+## Project Context
 
-RaftStack is a CLI tool that sets up Git hooks, commit conventions, and GitHub integration. It uses Commander for CLI parsing, @clack/prompts for interactive UIs, and generates configuration files for various tools.
+RaftStack is part of a developer framework standardization initiative for RaftLabs (30+ developers). The goal is to enforce consistent Git workflows, commit conventions, and code quality across all projects. See `docs/goal.md` for the complete strategy.
+
+This repository has two components:
+1. **CLI tool** (`@raftlabs/raftstack`) - Sets up Git hooks, commit conventions, and GitHub integration
+2. **Claude Code skills** (`.claude/skills/`) - AI-assisted code quality enforcement for React, backend, database, SEO, and general code quality
+
+## Architecture
 
 ### Core Flow
 
-1. **CLI entry** (`src/cli.ts`) - Commander-based command routing
-2. **Commands** (`src/commands/`) - `init` and `setup-protection` command handlers
-3. **Prompts** (`src/prompts/`) - Interactive configuration collection using @clack/prompts
-4. **Generators** (`src/generators/`) - File generation for each tool (Husky, Commitlint, etc.)
-5. **Utils** (`src/utils/`) - Shared utilities for file operations, project detection, git
+```
+cli.ts (Commander)
+    ↓
+commands/init.ts
+    ├─→ utils/git.ts          (repo validation)
+    ├─→ prompts/index.ts      (user config via @clack/prompts)
+    │       ↓
+    │   utils/detect-project.ts (auto-detect NX/Turbo/pnpm/single)
+    │
+    ├─→ generators/*.ts       (12 generators, each returns GeneratorResult)
+    │       ↓
+    │   utils/file-system.ts  (writeFileSafe with backup)
+    │
+    └─→ utils/package-json.ts (merge scripts & devDependencies)
+```
 
 ### Generator Pattern
 
-Each generator:
+Each generator in `src/generators/`:
 - Takes `targetDir` and tool-specific config parameters
 - Returns a `GeneratorResult` with `created`, `modified`, `skipped`, and `backedUp` arrays
 - Uses `writeFileSafe()` from `utils/file-system.ts` for safe file creation with backup support
-- Hook content is inline as template strings (no external template files)
+- Content is inline as template strings (no external template files)
+
+To add a new generator:
+1. Create `src/generators/new-tool.ts` exporting `generateNewTool(targetDir, ...config): Promise<GeneratorResult>`
+2. Export from `src/generators/index.ts`
+3. Call in `src/commands/init.ts` and add result to `results` array
 
 ### Project Type Detection
 
-The CLI auto-detects project type by checking for:
+The CLI auto-detects project type in `utils/detect-project.ts`:
 - `nx.json` → NX Monorepo
 - `turbo.json` → Turborepo
 - `pnpm-workspace.yaml` → pnpm Workspace
 - Fallback → Single Package
 
-This affects lint-staged and workflow configurations.
+Detection also checks for existing tools: `hasTypeScript()`, `hasEslint()`, `hasPrettier()`.
 
 ### Key Types
 
-`RaftStackConfig` in `src/types/config.ts` holds all user configuration collected during init, including project type, Asana settings, AI review tool choice, and code quality tool detection.
+`src/types/config.ts` defines:
+- `RaftStackConfig` - User configuration from prompts
+- `GeneratorResult` - Standard return type for all generators
+- `DetectionResult` - Project type with confidence level
+- `ProjectType` - "nx" | "turbo" | "pnpm-workspace" | "single"
+- `AIReviewTool` - "coderabbit" | "copilot" | "none"
+
+### Package.json Utilities
+
+`utils/package-json.ts` provides:
+- `mergeScripts(pkg, scripts, overwrite)` - Add scripts without clobbering
+- `mergeDevDependencies(pkg, deps)` - Add devDependencies
+- `RAFTSTACK_DEV_DEPENDENCIES` - Standard deps installed in target projects
+
+## Claude Code Skills
+
+Five skills in `.claude/skills/` enforce RaftLabs coding standards when using Claude Code:
+
+| Skill | Purpose |
+|-------|---------|
+| `react` | React 19+ patterns, SOLID components, performance optimization |
+| `backend` | Clean architecture for serverless/Hono/Express backends |
+| `database` | PostgreSQL/Drizzle ORM schema design and indexing |
+| `seo` | Technical SEO for Next.js/React applications |
+| `code-quality` | Universal readability rules (30-line functions, naming, etc.) |
+
+These skills are bundled with RaftStack and copied to target projects during init.
 
 ## Testing
 
-Tests use Vitest and create temporary directories for file system operations. Test files are co-located in `__tests__` folders within the relevant module directories.
+Tests use Vitest with temporary directories for file system isolation. Test files are co-located in `__tests__` folders.
+
+Pattern:
+```typescript
+beforeEach(() => {
+  TEST_DIR = mkdtempSync(join(tmpdir(), "raftstack-test-"));
+});
+afterEach(() => {
+  rmSync(TEST_DIR, { recursive: true, force: true });
+});
+```
