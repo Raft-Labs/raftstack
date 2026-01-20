@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { PackageJson } from "../types/config.js";
+import type { PackageJson, PackageManagerInfo } from "../types/config.js";
 
 /**
  * Read package.json from a directory
@@ -116,3 +116,19 @@ export const RAFTSTACK_DEV_DEPENDENCIES: Record<string, string> = {
   "lint-staged": "^15.0.0",
   "validate-branch-name": "^1.3.0",
 };
+
+/**
+ * Get package manager-specific scripts
+ * This can be used in the future to add PM-specific setup scripts
+ */
+export function getPackageManagerScripts(
+  _pm: PackageManagerInfo
+): Record<string, string> {
+  // Currently, all package managers use the same scripts
+  // This function is here for future extensibility if we need
+  // different scripts for different package managers
+  return {
+    commit: "czg",
+    prepare: "husky",
+  };
+}
