@@ -15,6 +15,7 @@ import {
   generateBranchProtectionDocs,
   generateContributing,
   generatePrettier,
+  generateClaudeSkills,
 } from "../generators/index.js";
 import {
   mergeDevDependencies,
@@ -150,6 +151,9 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
 
     // Documentation
     results.push(await generateContributing(targetDir, !!config.asanaBaseUrl));
+
+    // Claude Code skills for AI-assisted development
+    results.push(await generateClaudeSkills(targetDir));
 
     // Update package.json
     results.push(await updateProjectPackageJson(targetDir, config));
