@@ -117,7 +117,9 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
 
   try {
     // Core Git hooks and commit conventions
-    results.push(await generateHuskyHooks(targetDir, config.projectType));
+    results.push(
+      await generateHuskyHooks(targetDir, config.projectType, config.packageManager)
+    );
     results.push(await generateCommitlint(targetDir, config.asanaBaseUrl));
     results.push(await generateCzGit(targetDir, config.asanaBaseUrl));
     results.push(
@@ -143,7 +145,8 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
         targetDir,
         config.projectType,
         config.usesTypeScript,
-        config.usesEslint
+        config.usesEslint,
+        config.packageManager
       )
     );
     results.push(await generateCodeowners(targetDir, config.codeowners));
@@ -151,8 +154,10 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
     results.push(await generateBranchProtectionDocs(targetDir));
 
     // Documentation
-    results.push(await generateContributing(targetDir, !!config.asanaBaseUrl));
-    results.push(await generateQuickReference(targetDir));
+    results.push(
+      await generateContributing(targetDir, !!config.asanaBaseUrl, config.packageManager)
+    );
+    results.push(await generateQuickReference(targetDir, config.packageManager));
 
     // Claude Code skills for AI-assisted development
     results.push(await generateClaudeSkills(targetDir));
@@ -212,9 +217,9 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
   console.log();
   p.note(
     [
-      `${pc.cyan("1.")} Run ${pc.yellow("pnpm install")} to install dependencies`,
+      `${pc.cyan("1.")} Run ${pc.yellow(config.packageManager.install)} to install dependencies`,
       `${pc.cyan("2.")} Review the generated configuration files`,
-      `${pc.cyan("3.")} Use ${pc.yellow("pnpm commit")} for interactive commits`,
+      `${pc.cyan("3.")} Use ${pc.yellow(`${config.packageManager.run} commit`)} for interactive commits`,
       `${pc.cyan("4.")} Set up branch protection rules (see .github/BRANCH_PROTECTION_SETUP.md)`,
     ].join("\n"),
     "Next Steps"
