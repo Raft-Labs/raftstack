@@ -317,6 +317,58 @@ The script:
 3. Commits with proper message format
 4. Pushes and creates a PR (if `gh` CLI is available)
 
+## Versioning and Releases
+
+This project uses [Semantic Versioning](https://semver.org/) and automated releases.
+
+### Version Bumping
+
+Use npm scripts to bump versions locally:
+
+```bash
+# Patch release (1.0.0 -> 1.0.1) - bug fixes
+pnpm release:patch
+
+# Minor release (1.0.0 -> 1.1.0) - new features, backwards compatible
+pnpm release:minor
+
+# Major release (1.0.0 -> 2.0.0) - breaking changes
+pnpm release:major
+
+# Automatic bump based on conventional commits
+pnpm release
+```
+
+### Automated Releases
+
+Releases are automated via GitHub Actions:
+
+1. **Push to main** triggers the release workflow
+2. Workflow runs tests, bumps version, generates changelog
+3. Creates and pushes git tag
+4. Creates GitHub release
+5. Publishes to npm
+
+### Commit Convention
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat: add new feature` → minor version bump
+- `fix: bug fix` → patch version bump
+- `feat!: breaking change` or `BREAKING CHANGE:` in footer → major version bump
+- `docs:`, `chore:`, `style:`, `refactor:`, `test:` → no version bump
+
+### Manual Publishing
+
+To publish manually (emergency only):
+
+```bash
+npm version patch|minor|major
+git push --follow-tags
+```
+
+The publish workflow will trigger automatically on tag push.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidelines.
