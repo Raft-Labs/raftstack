@@ -28,7 +28,12 @@
     "prepublishOnly": "pnpm build",
     "prepublish": "pnpm test:run && pnpm build",
     "pack:test": "pnpm pack --dry-run",
-    "publish:test": "pnpm pack && tar -xvzf raftlabs-raftstack-*.tgz && rm -rf package raftlabs-raftstack-*.tgz"
+    "publish:test": "pnpm pack && tar -xvzf raftlabs-raftstack-*.tgz && rm -rf package raftlabs-raftstack-*.tgz",
+    "release": "standard-version",
+    "release:patch": "standard-version --release-as patch",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "release:first": "standard-version --first-release"
   },
   "keywords": [
     "cli",
@@ -58,6 +63,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
+    "standard-version": "^9.5.0",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",
     "vitest": "^1.0.0"
