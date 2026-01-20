@@ -10,6 +10,19 @@ function getBranchProtectionDocs(): string {
 
 This guide explains how to configure branch protection rules for your repository.
 
+## Quick Setup
+
+Run the automated setup command:
+
+\`\`\`bash
+raftstack setup-protection
+\`\`\`
+
+This command supports:
+- **Multiple branches**: main, staging, production, development, etc.
+- **Merge strategies**: Rebase (recommended), squash, or merge commits
+- **Review requirements**: Configurable number of required approvals
+
 ## Recommended Settings
 
 ### For \`main\` / \`master\` branch:
@@ -48,9 +61,9 @@ This guide explains how to configure branch protection rules for your repository
 5. Configure the settings as described above
 6. Click **Create** or **Save changes**
 
-## Automated Setup
+## Automated Setup (Recommended)
 
-You can also use the \`raftstack setup-protection\` command to configure
+Use the \`raftstack setup-protection\` command to configure
 branch protection rules automatically using the GitHub CLI.
 
 Requirements:
@@ -60,6 +73,23 @@ Requirements:
 \`\`\`bash
 raftstack setup-protection
 \`\`\`
+
+### Features
+
+The setup command will:
+1. Prompt you to select branches to protect (main, staging, production, etc.)
+2. Let you choose a merge strategy (rebase, squash, or merge commits)
+3. Configure required review count
+4. Apply branch protection rules to all selected branches
+5. Set repository merge settings
+
+### Merge Strategy Recommendations
+
+| Strategy | Use Case |
+|----------|----------|
+| **Rebase** (recommended) | Clean linear history, easy to follow |
+| **Squash** | Single commit per PR, cleaner history |
+| **Merge commit** | Preserve all commits, show PR merge points |
 
 ## Branch Naming Convention
 
