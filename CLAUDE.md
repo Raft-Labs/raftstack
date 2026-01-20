@@ -75,13 +75,61 @@ The CLI auto-detects project type in `utils/detect-project.ts`:
 
 Detection also checks for existing tools: `hasTypeScript()`, `hasEslint()`, `hasPrettier()`.
 
+### Package Manager Detection
+
+The CLI auto-detects package manager from lockfiles in `utils/detect-package-manager.ts`:
+
+```
+commands/init.ts → prompts/index.ts
+    ↓
+utils/detect-package-manager.ts
+    ├─→ detectPackageManager(targetDir)
+    │   • Priority: pnpm-lock.yaml > yarn.lock > package-lock.json
+    │   • Returns PackageManagerInfo or null
+    │
+    ├─→ detectYarnVersion(targetDir)
+    │   • Reads packageManager field from package.json
+    │   • Distinguishes Yarn 1.x vs Yarn 2+ (Berry)
+    │
+    └─→ getPackageManagerInfo(name)
+        • Returns metadata for npm/pnpm/yarn/yarn-berry
+        • Commands: install, run, exec, installFrozen
+        • Flags: needsSetupAction (pnpm only)
+```
+
+**Package Manager Metadata:**
+
+Each PM has specific commands and settings in `PACKAGE_MANAGERS` constant:
+- `install` - Regular install command (e.g., "npm install")
+- `run` - Script runner (e.g., "npm run", "pnpm", "yarn")
+- `exec` - Execute binaries (e.g., "npx", "pnpm dlx", "yarn dlx")
+- `installFrozen` - Frozen/immutable install for CI (e.g., "npm ci", "pnpm install --frozen-lockfile")
+- `needsSetupAction` - Whether GitHub Actions needs setup step (true for pnpm only)
+- `lockfile` - Lockfile name (e.g., "package-lock.json")
+- `cacheKey` - Cache key pattern for GitHub Actions
+
+**Workflow:**
+1. `detectPackageManager()` scans for lockfiles
+2. If `yarn.lock` found, call `detectYarnVersion()` to check Yarn version
+3. If no lockfile, user is prompted to select via `promptPackageManager()`
+4. Selected PM is stored in `config.packageManager` (type: `PackageManagerInfo`)
+5. Generators receive PM parameter and use it to customize commands
+
+**Files Using Package Manager:**
+- `generators/husky.ts` - Hooks use `pm.exec` for running tools
+- `generators/github-workflows.ts` - CI uses `pm.installFrozen` and conditionally adds pnpm setup
+- `generators/contributing.ts` - Docs show `pm.install` and `pm.run` commands
+- `generators/quick-reference.ts` - Quick reference shows PM-specific commands
+
 ### Key Types
 
 `src/types/config.ts` defines:
-- `RaftStackConfig` - User configuration from prompts
+- `RaftStackConfig` - User configuration from prompts (includes `packageManager: PackageManagerInfo`)
 - `GeneratorResult` - Standard return type for all generators
 - `DetectionResult` - Project type with confidence level
 - `ProjectType` - "nx" | "turbo" | "pnpm-workspace" | "single"
+- `PackageManager` - "npm" | "pnpm" | "yarn" | "yarn-berry"
+- `PackageManagerInfo` - Metadata for package manager (commands, flags, lockfile)
 - `AIReviewTool` - "coderabbit" | "copilot" | "none"
 
 ### Package.json Utilities

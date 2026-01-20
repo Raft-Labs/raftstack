@@ -77,6 +77,29 @@ The wizard will:
 | `CONTRIBUTING.md` | Developer contribution guide |
 | `.github/QUICK_REFERENCE.md` | One-page workflow cheat sheet for developers |
 
+## Package Manager Support
+
+RaftStack automatically detects and adapts to your package manager of choice:
+
+| Package Manager | Detection Method | Lockfile |
+|----------------|------------------|----------|
+| **npm** | `package-lock.json` | `package-lock.json` |
+| **pnpm** | `pnpm-lock.yaml` | `pnpm-lock.yaml` |
+| **Yarn Classic (1.x)** | `yarn.lock` | `yarn.lock` |
+| **Yarn Berry (2+)** | `yarn.lock` + `packageManager` field | `yarn.lock` |
+
+**Auto-Detection:**
+- RaftStack scans for lockfiles in your project root
+- Priority order: pnpm > Yarn > npm
+- For Yarn, the version is determined from the `packageManager` field in `package.json`
+- If no lockfile is found, you'll be prompted to select your preferred package manager
+
+**What Gets Customized:**
+- All generated hooks use the correct package manager commands (`npx` vs `pnpm dlx` vs `yarn dlx`)
+- GitHub workflows use appropriate install commands (`npm ci` vs `pnpm install --frozen-lockfile` vs `yarn install --immutable`)
+- pnpm projects automatically include the `pnpm/action-setup` action in CI workflows
+- Documentation shows the right commands for your package manager
+
 ## Commands
 
 ### `raftstack init`
