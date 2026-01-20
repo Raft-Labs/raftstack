@@ -8,18 +8,18 @@
 |-------|--------|---------|-----------|
 | 0 - Stabilization | In Progress | 2026-01-20 | - |
 | 1 - Testing | Complete | 2026-01-20 | 2026-01-20 |
-| 2 - Features | Not Started | - | - |
+| 2 - Features | Complete | 2026-01-20 | 2026-01-20 |
 | 3 - Pre-Release | Not Started | - | - |
 | 4 - Pilot | Not Started | - | - |
 | 5 - Org Rollout | Not Started | - | - |
 
 ---
 
-## Current Phase: 2 - Features
+## Current Phase: 3 - Pre-Release
 
-> See [Phase 2 Plan](./plans/phase-2-features.md) for full details
+> See [Phase 3 Plan](./plans/phase-3-pre-release.md) for full details
 
-Phase 0 and Phase 1 are complete (except for 0.3 beta publishing which requires NPM_TOKEN).
+Phase 0.3 (beta publishing) is blocked on NPM_TOKEN configuration in GitHub secrets.
 
 ---
 
@@ -45,9 +45,9 @@ Phase 0 and Phase 1 are complete (except for 0.3 beta publishing which requires 
 ### Phase 1
 
 - **1.1 Generator Unit Tests** - Complete (2026-01-20)
-  - Created 13 test files covering all generators
-  - 151 total tests passing
-  - Full coverage: husky, commitlint, lint-staged, claude-skills, prettier, cz-git, pr-template, branch-validation, codeowners, ai-review, contributing, github-workflows, branch-protection
+  - Created 14 test files covering all generators (including new ESLint generator)
+  - 165 unit tests passing
+  - Full coverage: husky, commitlint, lint-staged, claude-skills, prettier, cz-git, pr-template, branch-validation, codeowners, ai-review, contributing, github-workflows, branch-protection, eslint
 
 - **1.2 Integration Tests** - Complete (2026-01-20)
   - Created `src/__tests__/integration/generators-integration.test.ts`
@@ -59,7 +59,27 @@ Phase 0 and Phase 1 are complete (except for 0.3 beta publishing which requires 
   - Created `test/e2e/init.test.ts` with 15 tests
   - Tests: all project types, Asana integration, AI tools, file permissions, idempotency
 
-**Total Test Count: 177 tests across 17 files**
+### Phase 2
+
+- **2.1 ESLint Generator** - Complete (2026-01-20)
+  - Created `src/generators/eslint.ts` with ESLint 9 flat config support
+  - Auto-detects React projects and adds React/hooks plugins
+  - Supports TypeScript with typescript-eslint
+  - Skips if existing ESLint config detected
+  - 14 unit tests
+
+- **2.2 Enhanced Branch Protection** - Complete (2026-01-20)
+  - Multi-branch selection (main, staging, production, development)
+  - Merge strategy configuration (rebase, squash, merge)
+  - Repository-level merge settings via GitHub API
+  - Updated branch protection documentation
+
+- **2.3 Generator Completeness Review** - Complete (2026-01-20)
+  - Fixed commitlint Asana rule (was defined but not enabled)
+  - Added PR size guidelines to CONTRIBUTING.md
+  - Verified all goal.md requirements are met
+
+**Total Test Count: 191 tests across 18 files**
 
 ---
 
@@ -75,8 +95,10 @@ Phase 0 and Phase 1 are complete (except for 0.3 beta publishing which requires 
 
 **2026-01-20:** Started Phase 0 implementation. Skills bundling is complete and verified. CI workflow created.
 
-**2026-01-20:** Completed Phase 1 - Full test coverage achieved:
-- 151 unit tests for all 13 generators
-- 11 integration tests
-- 15 E2E tests with fixtures for all 4 project types
-- Total: 177 tests passing
+**2026-01-20:** Completed Phase 1 - Full test coverage achieved (177 tests).
+
+**2026-01-20:** Completed Phase 2 - Features:
+- ESLint 9 flat config generator (auto-detects React, TypeScript)
+- Enhanced branch protection (multi-branch, merge strategies)
+- Generator completeness review and fixes
+- Total: 191 tests passing
