@@ -182,3 +182,14 @@ export function getProjectTypeDescription(type: ProjectType): string {
       return "Single Package";
   }
 }
+
+/**
+ * Re-export package manager detection utilities for convenience
+ */
+export {
+  detectPackageManager,
+  detectYarnVersion,
+  getPackageManagerInfo,
+  getPackageManagerDescription,
+  PACKAGE_MANAGERS,
+} from "./detect-package-manager.js";

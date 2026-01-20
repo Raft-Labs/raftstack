@@ -9,11 +9,48 @@ export type ProjectType = "nx" | "turbo" | "pnpm-workspace" | "single";
 export type AIReviewTool = "coderabbit" | "copilot" | "none";
 
 /**
+ * Package manager type
+ */
+export type PackageManager = "npm" | "pnpm" | "yarn" | "yarn-berry";
+
+/**
+ * Package manager metadata and command information
+ */
+export interface PackageManagerInfo {
+  /** Package manager name */
+  name: PackageManager;
+
+  /** Install command (e.g., "npm install") */
+  install: string;
+
+  /** Run command (e.g., "npm run") */
+  run: string;
+
+  /** Execute command for running binaries (e.g., "npx") */
+  exec: string;
+
+  /** Lockfile name (e.g., "package-lock.json") */
+  lockfile: string;
+
+  /** Frozen/immutable install command for CI (e.g., "npm ci") */
+  installFrozen: string;
+
+  /** Whether this PM needs a setup action in GitHub workflows (pnpm only) */
+  needsSetupAction: boolean;
+
+  /** Cache key pattern for GitHub actions cache */
+  cacheKey: string;
+}
+
+/**
  * User configuration collected during init
  */
 export interface RaftStackConfig {
   /** Detected or user-selected project type */
   projectType: ProjectType;
+
+  /** Detected or user-selected package manager */
+  packageManager: PackageManagerInfo;
 
   /** Asana workspace base URL for task linking */
   asanaBaseUrl?: string;
