@@ -3,6 +3,8 @@ import pc from "picocolors";
 import type {
   AIReviewTool,
   DetectionResult,
+  PackageManager,
+  PackageManagerInfo,
   ProjectType,
   RaftStackConfig,
 } from "../types/config.js";
@@ -12,6 +14,9 @@ import {
   hasTypeScript,
   hasEslint,
   hasPrettier,
+  detectPackageManager,
+  getPackageManagerInfo,
+  getPackageManagerDescription,
 } from "../utils/detect-project.js";
 
 /**
@@ -182,6 +187,58 @@ export async function promptCodeowners(): Promise<string[]> {
 }
 
 /**
+ * Prompt for package manager selection
+ */
+export async function promptPackageManager(
+  targetDir: string
+): Promise<PackageManagerInfo> {
+  // Try to auto-detect from lockfiles
+  const detected = detectPackageManager(targetDir);
+
+  if (detected) {
+    const description = getPackageManagerDescription(detected);
+    p.log.info(`Detected ${pc.cyan(description)} from lockfile`);
+    return detected;
+  }
+
+  // No lockfile found - prompt user to select
+  p.log.warn("No package manager lockfile detected");
+
+  const selected = await p.select({
+    message: "Select your package manager:",
+    options: [
+      {
+        value: "npm",
+        label: "npm",
+        hint: "Node Package Manager (default)",
+      },
+      {
+        value: "pnpm",
+        label: "pnpm",
+        hint: "Performant npm",
+      },
+      {
+        value: "yarn",
+        label: "Yarn Classic (1.x)",
+        hint: "Classic Yarn",
+      },
+      {
+        value: "yarn-berry",
+        label: "Yarn Berry (2+)",
+        hint: "Modern Yarn",
+      },
+    ],
+  });
+
+  if (p.isCancel(selected)) {
+    p.cancel("Setup cancelled.");
+    process.exit(0);
+  }
+
+  return getPackageManagerInfo(selected as PackageManager);
+}
+
+/**
  * Show summary before generating files
  */
 export async function promptConfirmation(
@@ -191,6 +248,7 @@ export async function promptConfirmation(
   p.note(
     [
       `${pc.cyan("Project Type:")} ${getProjectTypeDescription(config.projectType)}`,
+      `${pc.cyan("Package Manager:")} ${getPackageManagerDescription(config.packageManager)}`,
       `${pc.cyan("TypeScript:")} ${config.usesTypeScript ? "Yes" : "No"}`,
       `${pc.cyan("ESLint:")} ${config.usesEslint ? "Yes" : "No"}`,
       `${pc.cyan("Prettier:")} ${config.usesPrettier ? "Yes" : "No"}`,
@@ -226,6 +284,9 @@ export async function collectConfig(
   const detection = await detectProjectType(targetDir);
   const projectType = await promptProjectType(detection);
 
+  // Detect package manager
+  const packageManager = await promptPackageManager(targetDir);
+
   // Detect existing tooling
   const usesTypeScript = await hasTypeScript(targetDir);
   const usesEslint = await hasEslint(targetDir);
@@ -238,6 +299,7 @@ export async function collectConfig(
 
   const config: RaftStackConfig = {
     projectType,
+    packageManager,
     asanaBaseUrl,
     aiReviewTool,
     codeowners,
