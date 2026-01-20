@@ -40,6 +40,9 @@ RaftStack is a CLI tool that enforces consistent Git workflows, commit conventio
 | CI Workflow | ✅ Complete | `ci.yml` + `publish.yml` |
 | Documentation | ✅ Complete | README, CHANGELOG, CONTRIBUTING |
 | NPM Publishing | ⏳ Action Required | Manual publish needed |
+| Metrics Command | ✅ Complete | `raftstack metrics` for compliance tracking |
+| Quick Reference | ✅ Complete | .github/QUICK_REFERENCE.md generated |
+| Deployment Script | ✅ Complete | scripts/deploy-to-project.sh for rollout |
 
 ### Next Steps
 
@@ -50,6 +53,7 @@ RaftStack is a CLI tool that enforces consistent Git workflows, commit conventio
    ```
 2. Verify installation: `pnpm dlx @raftlabs/raftstack init`
 3. Proceed to Phase 4: Pilot deployment
+4. Use `raftstack metrics` to track adoption
 
 ---
 

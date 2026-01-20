@@ -139,3 +139,9 @@ pnpm dlx @raftlabs/raftstack init
 - Documentation finalized (README.md, CHANGELOG.md)
 - Package ready for npm publish
 - v1.0.0 tag pushed to GitHub
+
+**2026-01-20:** Added Phase 4/5 support tooling:
+- Added `raftstack metrics` command for compliance tracking
+- Added Quick Reference guide generator (.github/QUICK_REFERENCE.md)
+- Added deployment helper script (scripts/deploy-to-project.sh)
+- Updated README with new features and org rollout documentation
