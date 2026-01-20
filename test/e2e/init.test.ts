@@ -38,6 +38,7 @@ import {
 } from "../../src/utils/package-json.js";
 
 import type { GeneratorResult, ProjectType, AIReviewTool } from "../../src/types/config.js";
+import { getPackageManagerInfo } from "../../src/utils/detect-package-manager.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -62,8 +63,11 @@ async function runFullInit(
 ): Promise<GeneratorResult> {
   const results: GeneratorResult[] = [];
 
+  // Default to pnpm for E2E tests
+  const pm = getPackageManagerInfo("pnpm");
+
   // Core Git hooks and commit conventions
-  results.push(await generateHuskyHooks(targetDir, config.projectType));
+  results.push(await generateHuskyHooks(targetDir, config.projectType, pm));
   results.push(await generateCommitlint(targetDir, config.asanaBaseUrl));
   results.push(await generateCzGit(targetDir, config.asanaBaseUrl));
   results.push(
@@ -89,7 +93,8 @@ async function runFullInit(
       targetDir,
       config.projectType,
       config.usesTypeScript,
-      config.usesEslint
+      config.usesEslint,
+      pm
     )
   );
   results.push(await generateCodeowners(targetDir, config.codeowners));
@@ -97,7 +102,7 @@ async function runFullInit(
   results.push(await generateBranchProtectionDocs(targetDir));
 
   // Documentation
-  results.push(await generateContributing(targetDir, !!config.asanaBaseUrl));
+  results.push(await generateContributing(targetDir, !!config.asanaBaseUrl, pm));
 
   // Claude Code skills
   results.push(await generateClaudeSkills(targetDir));

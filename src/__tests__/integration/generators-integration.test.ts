@@ -28,6 +28,7 @@ import {
   writePackageJson,
   RAFTSTACK_DEV_DEPENDENCIES,
 } from "../../utils/package-json.js";
+import { getPackageManagerInfo } from "../../utils/detect-package-manager.js";
 
 let TEST_DIR: string;
 
@@ -54,19 +55,20 @@ describe("Generators Integration", () => {
 
       // Run all generators in the correct order
       const results = [];
+      const pm = getPackageManagerInfo("pnpm");
 
-      results.push(await generateHuskyHooks(TEST_DIR, "single"));
+      results.push(await generateHuskyHooks(TEST_DIR, "single", pm));
       results.push(await generateCommitlint(TEST_DIR, undefined));
       results.push(await generateCzGit(TEST_DIR, undefined));
       results.push(await generateLintStaged(TEST_DIR, "single", true, true, true));
       results.push(await generateBranchValidation(TEST_DIR));
       results.push(await generatePrettier(TEST_DIR));
       results.push(await generatePRTemplate(TEST_DIR, false));
-      results.push(await generateGitHubWorkflows(TEST_DIR, "single", true, true));
+      results.push(await generateGitHubWorkflows(TEST_DIR, "single", true, true, pm));
       results.push(await generateCodeowners(TEST_DIR, ["@owner1"]));
       results.push(await generateAIReview(TEST_DIR, "none"));
       results.push(await generateBranchProtectionDocs(TEST_DIR));
-      results.push(await generateContributing(TEST_DIR, false));
+      results.push(await generateContributing(TEST_DIR, false, pm));
       results.push(await generateClaudeSkills(TEST_DIR));
 
       // Verify generator results are collected
@@ -111,10 +113,11 @@ describe("Generators Integration", () => {
 
   describe("Full init simulation for NX project", () => {
     it("should create NX-specific workflow", async () => {
+      const pm = getPackageManagerInfo("pnpm");
       writeFileSync(join(TEST_DIR, "nx.json"), "{}");
       writeFileSync(join(TEST_DIR, "tsconfig.base.json"), "{}");
 
-      await generateGitHubWorkflows(TEST_DIR, "nx", true, true);
+      await generateGitHubWorkflows(TEST_DIR, "nx", true, true, pm);
 
       const workflow = readFileSync(
         join(TEST_DIR, ".github", "workflows", "pr-checks.yml"),
@@ -138,9 +141,10 @@ describe("Generators Integration", () => {
 
   describe("Full init simulation for Turbo project", () => {
     it("should create Turbo-specific workflow", async () => {
+      const pm = getPackageManagerInfo("pnpm");
       writeFileSync(join(TEST_DIR, "turbo.json"), "{}");
 
-      await generateGitHubWorkflows(TEST_DIR, "turbo", true, true);
+      await generateGitHubWorkflows(TEST_DIR, "turbo", true, true, pm);
 
       const workflow = readFileSync(
         join(TEST_DIR, ".github", "workflows", "pr-checks.yml"),
@@ -153,12 +157,13 @@ describe("Generators Integration", () => {
 
   describe("With Asana integration", () => {
     it("should include Asana sections in relevant files", async () => {
+      const pm = getPackageManagerInfo("pnpm");
       const asanaUrl = "https://app.asana.com/0/workspace";
 
       await generateCommitlint(TEST_DIR, asanaUrl);
       await generateCzGit(TEST_DIR, asanaUrl);
       await generatePRTemplate(TEST_DIR, true);
-      await generateContributing(TEST_DIR, true);
+      await generateContributing(TEST_DIR, true, pm);
 
       // Verify Asana references
       const commitlint = readFileSync(join(TEST_DIR, "commitlint.config.js"), "utf-8");
@@ -198,12 +203,13 @@ describe("Generators Integration", () => {
 
   describe("Backup behavior", () => {
     it("should backup existing files", async () => {
+      const pm = getPackageManagerInfo("pnpm");
       // Create existing files
       mkdirSync(join(TEST_DIR, ".husky"), { recursive: true });
       writeFileSync(join(TEST_DIR, ".husky", "pre-commit"), "# old hook");
       writeFileSync(join(TEST_DIR, "commitlint.config.js"), "// old config");
 
-      const huskyResult = await generateHuskyHooks(TEST_DIR, "single");
+      const huskyResult = await generateHuskyHooks(TEST_DIR, "single", pm);
       const commitlintResult = await generateCommitlint(TEST_DIR, undefined);
 
       expect(huskyResult.backedUp.length).toBeGreaterThan(0);

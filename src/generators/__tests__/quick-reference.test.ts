@@ -3,6 +3,7 @@ import { readFileSync, mkdtempSync, rmSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { generateQuickReference } from "../quick-reference.js";
+import { getPackageManagerInfo } from "../../utils/detect-package-manager.js";
 
 let TEST_DIR: string;
 
@@ -16,7 +17,8 @@ describe("generateQuickReference", () => {
   });
 
   it("should create QUICK_REFERENCE.md in .github directory", async () => {
-    const result = await generateQuickReference(TEST_DIR);
+    const pm = getPackageManagerInfo("npm");
+    const result = await generateQuickReference(TEST_DIR, pm);
 
     expect(result.created).toContain(".github/QUICK_REFERENCE.md");
     expect(existsSync(join(TEST_DIR, ".github", "QUICK_REFERENCE.md"))).toBe(
@@ -25,7 +27,8 @@ describe("generateQuickReference", () => {
   });
 
   it("should include branch naming conventions", async () => {
-    await generateQuickReference(TEST_DIR);
+    const pm = getPackageManagerInfo("npm");
+    await generateQuickReference(TEST_DIR, pm);
 
     const content = readFileSync(
       join(TEST_DIR, ".github", "QUICK_REFERENCE.md"),
@@ -41,7 +44,8 @@ describe("generateQuickReference", () => {
   });
 
   it("should include commit types with emojis", async () => {
-    await generateQuickReference(TEST_DIR);
+    const pm = getPackageManagerInfo("npm");
+    await generateQuickReference(TEST_DIR, pm);
 
     const content = readFileSync(
       join(TEST_DIR, ".github", "QUICK_REFERENCE.md"),
@@ -54,8 +58,21 @@ describe("generateQuickReference", () => {
     expect(content).toContain("🐛");
   });
 
-  it("should include pnpm commit command", async () => {
-    await generateQuickReference(TEST_DIR);
+  it("should include npm commit command when using npm", async () => {
+    const pm = getPackageManagerInfo("npm");
+    await generateQuickReference(TEST_DIR, pm);
+
+    const content = readFileSync(
+      join(TEST_DIR, ".github", "QUICK_REFERENCE.md"),
+      "utf-8"
+    );
+
+    expect(content).toContain("npm run commit");
+  });
+
+  it("should include pnpm commands when using pnpm", async () => {
+    const pm = getPackageManagerInfo("pnpm");
+    await generateQuickReference(TEST_DIR, pm);
 
     const content = readFileSync(
       join(TEST_DIR, ".github", "QUICK_REFERENCE.md"),
@@ -63,10 +80,25 @@ describe("generateQuickReference", () => {
     );
 
     expect(content).toContain("pnpm commit");
+    expect(content).toContain("pnpm dlx @raftlabs/raftstack metrics");
+  });
+
+  it("should include yarn commands when using yarn", async () => {
+    const pm = getPackageManagerInfo("yarn");
+    await generateQuickReference(TEST_DIR, pm);
+
+    const content = readFileSync(
+      join(TEST_DIR, ".github", "QUICK_REFERENCE.md"),
+      "utf-8"
+    );
+
+    expect(content).toContain("yarn commit");
+    expect(content).toContain("yarn @raftlabs/raftstack metrics");
   });
 
   it("should include PR checklist", async () => {
-    await generateQuickReference(TEST_DIR);
+    const pm = getPackageManagerInfo("npm");
+    await generateQuickReference(TEST_DIR, pm);
 
     const content = readFileSync(
       join(TEST_DIR, ".github", "QUICK_REFERENCE.md"),
@@ -79,7 +111,8 @@ describe("generateQuickReference", () => {
   });
 
   it("should include common mistakes section", async () => {
-    await generateQuickReference(TEST_DIR);
+    const pm = getPackageManagerInfo("npm");
+    await generateQuickReference(TEST_DIR, pm);
 
     const content = readFileSync(
       join(TEST_DIR, ".github", "QUICK_REFERENCE.md"),
@@ -92,7 +125,8 @@ describe("generateQuickReference", () => {
   });
 
   it("should include metrics command reference", async () => {
-    await generateQuickReference(TEST_DIR);
+    const pm = getPackageManagerInfo("npm");
+    await generateQuickReference(TEST_DIR, pm);
 
     const content = readFileSync(
       join(TEST_DIR, ".github", "QUICK_REFERENCE.md"),
@@ -103,14 +137,15 @@ describe("generateQuickReference", () => {
   });
 
   it("should backup existing file when run twice", async () => {
+    const pm = getPackageManagerInfo("npm");
     // First run
-    await generateQuickReference(TEST_DIR);
+    await generateQuickReference(TEST_DIR, pm);
     expect(existsSync(join(TEST_DIR, ".github", "QUICK_REFERENCE.md"))).toBe(
       true
     );
 
     // Second run
-    const result = await generateQuickReference(TEST_DIR);
+    const result = await generateQuickReference(TEST_DIR, pm);
 
     expect(result.modified).toContain(".github/QUICK_REFERENCE.md");
     expect(result.backedUp).toContain(".github/QUICK_REFERENCE.md");
