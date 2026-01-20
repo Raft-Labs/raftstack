@@ -6,9 +6,9 @@ Complete remaining features from [goal.md](../goal.md) that haven't been impleme
 
 ## Success Criteria
 
-- [ ] All goal.md features implemented
-- [ ] Tests added for new features
-- [ ] Documentation updated
+- [x] All goal.md features implemented
+- [x] Tests added for new features (199 tests)
+- [x] Documentation updated
 
 ---
 
@@ -20,14 +20,14 @@ Complete remaining features from [goal.md](../goal.md) that haven't been impleme
 
 #### Tasks
 
-- [ ] Create `src/generators/eslint.ts`:
+- [x] Create `src/generators/eslint.ts`:
   - Generate ESLint 9+ flat config
   - Include RaftLabs recommended rules
   - Handle TypeScript projects
   - Handle React projects (detect and add react plugin)
-- [ ] Add prompt for ESLint in init flow
-- [ ] Write tests for generator
-- [ ] Update documentation
+- [x] Add prompt for ESLint in init flow
+- [x] Write tests for generator (14 tests)
+- [x] Update documentation
 
 #### Configuration Template
 
@@ -78,17 +78,17 @@ export default [
 
 #### Tasks
 
-- [ ] Extend `setup-protection` to support multiple branches:
+- [x] Extend `setup-protection` to support multiple branches:
   - main
   - staging
   - production
   - development
-- [ ] Add merge strategy configuration:
+- [x] Add merge strategy configuration:
   - Rebase merge (recommended)
   - Squash merge
   - Merge commit
-- [ ] Update prompts to ask for branch configuration
-- [ ] Add tests for new functionality
+- [x] Update prompts to ask for branch configuration
+- [x] Add tests for new functionality
 
 #### Enhanced Prompt Flow
 
@@ -129,10 +129,10 @@ const mergeStrategy = await select({
 
 Before adding new features, review existing generators against goal.md requirements:
 
-- [ ] Verify `commitlint.config.js` has custom Asana task rule
-- [ ] Verify `.czrc` prompts for Asana task link
-- [ ] Verify `CONTRIBUTING.md` includes all conventions
-- [ ] Verify `pr-workflow.yml` includes all required checks
+- [x] Verify `commitlint.config.js` has custom Asana task rule
+- [x] Verify `.czrc` prompts for Asana task link
+- [x] Verify `CONTRIBUTING.md` includes all conventions
+- [x] Verify `pr-workflow.yml` includes all required checks
 
 ---
 

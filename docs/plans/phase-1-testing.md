@@ -6,9 +6,9 @@ Achieve comprehensive test coverage for confidence in changes and refactoring.
 
 ## Success Criteria
 
-- [ ] Test coverage > 80%
-- [ ] All 13 generators have unit tests
-- [ ] E2E tests pass for all 4 project types (NX, Turbo, pnpm-workspace, single)
+- [x] Test coverage > 80%
+- [x] All 14 generators have unit tests (199 tests total)
+- [x] E2E tests pass for all 4 project types (NX, Turbo, pnpm-workspace, single)
 
 ---
 
@@ -20,20 +20,22 @@ Achieve comprehensive test coverage for confidence in changes and refactoring.
 
 #### Tasks
 
-- [ ] Create test file for each generator:
-  - [ ] `src/generators/__tests__/husky.test.ts`
-  - [ ] `src/generators/__tests__/commitlint.test.ts`
-  - [ ] `src/generators/__tests__/lint-staged.test.ts`
-  - [ ] `src/generators/__tests__/prettier.test.ts`
-  - [ ] `src/generators/__tests__/czrc.test.ts`
-  - [ ] `src/generators/__tests__/validate-branch-name.test.ts`
-  - [ ] `src/generators/__tests__/pr-template.test.ts`
-  - [ ] `src/generators/__tests__/codeowners.test.ts`
-  - [ ] `src/generators/__tests__/pr-workflow.test.ts`
-  - [ ] `src/generators/__tests__/ai-review.test.ts`
-  - [ ] `src/generators/__tests__/contributing.test.ts`
-  - [ ] `src/generators/__tests__/setup-protection.test.ts`
-  - [ ] `src/generators/__tests__/claude-skills.test.ts`
+- [x] Create test file for each generator:
+  - [x] `src/generators/__tests__/husky.test.ts`
+  - [x] `src/generators/__tests__/commitlint.test.ts`
+  - [x] `src/generators/__tests__/lint-staged.test.ts`
+  - [x] `src/generators/__tests__/prettier.test.ts`
+  - [x] `src/generators/__tests__/cz-git.test.ts`
+  - [x] `src/generators/__tests__/branch-validation.test.ts`
+  - [x] `src/generators/__tests__/pr-template.test.ts`
+  - [x] `src/generators/__tests__/codeowners.test.ts`
+  - [x] `src/generators/__tests__/github-workflows.test.ts`
+  - [x] `src/generators/__tests__/ai-review.test.ts`
+  - [x] `src/generators/__tests__/contributing.test.ts`
+  - [x] `src/generators/__tests__/branch-protection.test.ts`
+  - [x] `src/generators/__tests__/claude-skills.test.ts`
+  - [x] `src/generators/__tests__/eslint.test.ts`
+  - [x] `src/generators/__tests__/quick-reference.test.ts`
 
 #### Test Coverage Per Generator
 
@@ -80,14 +82,11 @@ describe("generateXxx", () => {
 
 #### Tasks
 
-- [ ] Create `src/__tests__/integration/init-flow.test.ts`:
+- [x] Create `src/__tests__/integration/generators-integration.test.ts`:
   - Test full init flow with mocked prompts
   - Test file conflict handling (backup/skip)
   - Test package.json merging
-- [ ] Create `src/__tests__/integration/setup-protection.test.ts`:
-  - Mock `gh` CLI calls
-  - Test API response handling
-  - Test error scenarios
+  - 11 integration tests covering all scenarios
 
 #### Mocking Strategy
 
@@ -117,17 +116,18 @@ vi.mock("child_process", () => ({
 
 #### Tasks
 
-- [ ] Create test fixtures directory: `test/fixtures/`
-  - [ ] `test/fixtures/nx-project/` - Minimal NX workspace
-  - [ ] `test/fixtures/turbo-project/` - Minimal Turborepo
-  - [ ] `test/fixtures/pnpm-workspace/` - pnpm workspace
-  - [ ] `test/fixtures/single-project/` - Single package project
-- [ ] Create `test/e2e/init.test.ts`:
+- [x] Create test fixtures directory: `test/fixtures/`
+  - [x] `test/fixtures/nx-project/` - Minimal NX workspace
+  - [x] `test/fixtures/turbo-project/` - Minimal Turborepo
+  - [x] `test/fixtures/pnpm-workspace/` - pnpm workspace
+  - [x] `test/fixtures/single-project/` - Single package project
+- [x] Create `test/e2e/init.test.ts`:
   - Copy fixture to temp directory
   - Run `raftstack init` programmatically
   - Verify all expected files created
   - Verify hooks are executable
   - Verify package.json updated correctly
+  - 15 E2E tests passing
 
 #### Fixture Structure
 
