@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { runInit } from "./commands/init.js";
 import { runSetupProtection } from "./commands/setup-protection.js";
 import { runMetrics } from "./commands/metrics.js";
+import pkg from "../package.json" assert { type: "json" };
 
 const program = new Command();
 
@@ -10,7 +11,7 @@ program
   .description(
     "CLI tool for setting up Git hooks, commit conventions, and GitHub integration"
   )
-  .version("1.1.0");
+  .version(pkg.version);
 
 program
   .command("init")
