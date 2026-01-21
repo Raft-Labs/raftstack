@@ -40,6 +40,54 @@ The wizard will:
 4. Set up CODEOWNERS for automatic PR reviewers
 5. Generate all configuration files
 
+## Getting Started
+
+After installing RaftStack in your project, follow these steps:
+
+### 1. Initialize RaftStack
+
+```bash
+# Run the interactive setup wizard
+pnpm dlx @raftlabs/raftstack init
+# or
+npx @raftlabs/raftstack init
+```
+
+### 2. Initialize Claude Code (Optional)
+
+If you use [Claude Code](https://claude.ai/code), initialize it to enable the bundled AI development skills:
+
+```bash
+claude /init
+```
+
+This creates a `CLAUDE.md` file and enables the [Claude Code Skills](#claude-code-skills) that were copied to `.claude/skills/`.
+
+### 3. Clean Up Before Committing
+
+RaftStack creates `.backup` files for any existing configs it modifies. Remove these before your first commit:
+
+```bash
+# Find and review backup files
+find . -name "*.backup" -type f
+
+# Remove backup files after reviewing
+find . -name "*.backup" -type f -delete
+```
+
+### 4. Install Dependencies and Commit
+
+```bash
+# Install new dependencies added by RaftStack
+pnpm install  # or npm install / yarn
+
+# Stage all changes
+git add .
+
+# Use the interactive commit wizard
+pnpm commit
+```
+
 ## What Gets Generated
 
 ### Git Hooks (via Husky)
@@ -139,19 +187,11 @@ Use during pilot rollout or ongoing maintenance to track team adoption.
 
 ## After Setup
 
-1. **Install dependencies:**
-   ```bash
-   pnpm install
-   ```
+See [Getting Started](#getting-started) for the complete setup workflow. Once configured:
 
-2. **Make commits using the interactive wizard:**
-   ```bash
-   pnpm commit
-   ```
-
-3. **Review the generated configuration** and customize as needed.
-
-4. **Set up branch protection** on GitHub (see `.github/BRANCH_PROTECTION_SETUP.md`).
+- **Make commits** using `pnpm commit` for the interactive wizard
+- **Set up branch protection** on GitHub (see `.github/BRANCH_PROTECTION_SETUP.md`)
+- **Review generated configs** and customize as needed
 
 ## Commit Convention
 
