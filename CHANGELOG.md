@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.3.0](https://github.com/Raft-Labs/raftstack/compare/v1.2.1...v1.3.0) (2026-01-21)
+
+
+### Features
+
+* add package manager detection with support for npm, pnpm, yarn, and yarn-berry ([917adda](https://github.com/Raft-Labs/raftstack/commit/917addaa39b57f1fd904d9b1e5dd30060f287266))
+* dynamically load version from package.json in CLI ([7f6da8d](https://github.com/Raft-Labs/raftstack/commit/7f6da8d4c7c67d9614355d71b88004c47d47659a))
+* integrate package manager detection into init prompts ([aad2b81](https://github.com/Raft-Labs/raftstack/commit/aad2b8196e26136e53b1a3dce0ca42e45610ac75))
+* pass package manager to all generators in init command ([49a0652](https://github.com/Raft-Labs/raftstack/commit/49a0652f612f459bf7255369e794f19e538f9be6))
+* update generators to use package manager-specific commands ([b9cf1ff](https://github.com/Raft-Labs/raftstack/commit/b9cf1ff8e6267aaf023be64de7265e1b5a2ac0f6))
+
+
+### Bug Fixes
+
+* mark unused parameter with underscore in getPackageManagerScripts ([6ac096c](https://github.com/Raft-Labs/raftstack/commit/6ac096c4eb56196d104d1b950caf87a319ff05ad))
+
+
+### Tests
+
+* add comprehensive package manager detection and generator tests ([40a90ee](https://github.com/Raft-Labs/raftstack/commit/40a90ee673a35805d0e4d455843be04428312ea1))
+
+
+### Documentation
+
+* add package manager support documentation ([a245414](https://github.com/Raft-Labs/raftstack/commit/a245414b5bec3b2a8ff5d6c8fe4cae48d8d875af))
+* update plan checklist with v1.2.1 release ([5a04d88](https://github.com/Raft-Labs/raftstack/commit/5a04d88191077893629c37c1885c1cf55136ea48))
+* update progress with v1.2.1 release notes ([36245c6](https://github.com/Raft-Labs/raftstack/commit/36245c656dd5a9640a30554e85ec0704d88b802a))
+
 ### [1.2.1](https://github.com/Raft-Labs/raftstack/compare/v1.2.0...v1.2.1) (2026-01-20)
 
 
