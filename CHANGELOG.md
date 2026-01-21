@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.4.2](https://github.com/Raft-Labs/raftstack/compare/v1.4.1...v1.4.2) (2026-01-21)
+
+
+### Documentation
+
+* simplify npm README to essentials only ([19f2286](https://github.com/Raft-Labs/raftstack/commit/19f2286e21474f33aedbc7a436766eb8cf09a94a))
+
 ### [1.4.1](https://github.com/Raft-Labs/raftstack/compare/v1.2.1...v1.4.1) (2026-01-21)
 
 
