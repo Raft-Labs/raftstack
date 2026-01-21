@@ -50,6 +50,7 @@
     "url": "git+https://github.com/Raft-Labs/raftstack.git"
   },
   "homepage": "https://github.com/Raft-Labs/raftstack#readme",
+  "readme": "README.npm.md",
   "bugs": {
     "url": "https://github.com/Raft-Labs/raftstack/issues"
   },
