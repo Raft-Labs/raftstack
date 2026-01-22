@@ -177,6 +177,7 @@ describe("detect-package-manager", () => {
       expect(info.run).toBe("npm run");
       expect(info.exec).toBe("npx");
       expect(info.installFrozen).toBe("npm ci");
+      expect(info.addDev).toBe("install -D");
       expect(info.needsSetupAction).toBe(false);
     });
 
@@ -188,6 +189,7 @@ describe("detect-package-manager", () => {
       expect(info.run).toBe("pnpm");
       expect(info.exec).toBe("pnpm dlx");
       expect(info.installFrozen).toBe("pnpm install --frozen-lockfile");
+      expect(info.addDev).toBe("add -D");
       expect(info.needsSetupAction).toBe(true);
     });
 
@@ -199,6 +201,7 @@ describe("detect-package-manager", () => {
       expect(info.run).toBe("yarn");
       expect(info.exec).toBe("yarn");
       expect(info.installFrozen).toBe("yarn install --frozen-lockfile");
+      expect(info.addDev).toBe("add -D");
       expect(info.needsSetupAction).toBe(false);
     });
 
@@ -210,6 +213,7 @@ describe("detect-package-manager", () => {
       expect(info.run).toBe("yarn");
       expect(info.exec).toBe("yarn dlx");
       expect(info.installFrozen).toBe("yarn install --immutable");
+      expect(info.addDev).toBe("add -D");
       expect(info.needsSetupAction).toBe(false);
     });
   });
@@ -254,6 +258,7 @@ describe("detect-package-manager", () => {
       expect(npm).toHaveProperty("exec");
       expect(npm).toHaveProperty("lockfile");
       expect(npm).toHaveProperty("installFrozen");
+      expect(npm).toHaveProperty("addDev");
       expect(npm).toHaveProperty("needsSetupAction");
       expect(npm).toHaveProperty("cacheKey");
     });
@@ -267,6 +272,7 @@ describe("detect-package-manager", () => {
       expect(pnpm).toHaveProperty("exec");
       expect(pnpm).toHaveProperty("lockfile");
       expect(pnpm).toHaveProperty("installFrozen");
+      expect(pnpm).toHaveProperty("addDev");
       expect(pnpm).toHaveProperty("needsSetupAction");
       expect(pnpm).toHaveProperty("cacheKey");
     });
@@ -280,6 +286,7 @@ describe("detect-package-manager", () => {
       expect(yarn).toHaveProperty("exec");
       expect(yarn).toHaveProperty("lockfile");
       expect(yarn).toHaveProperty("installFrozen");
+      expect(yarn).toHaveProperty("addDev");
       expect(yarn).toHaveProperty("needsSetupAction");
       expect(yarn).toHaveProperty("cacheKey");
     });
@@ -293,6 +300,7 @@ describe("detect-package-manager", () => {
       expect(yarnBerry).toHaveProperty("exec");
       expect(yarnBerry).toHaveProperty("lockfile");
       expect(yarnBerry).toHaveProperty("installFrozen");
+      expect(yarnBerry).toHaveProperty("addDev");
       expect(yarnBerry).toHaveProperty("needsSetupAction");
       expect(yarnBerry).toHaveProperty("cacheKey");
     });

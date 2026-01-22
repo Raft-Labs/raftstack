@@ -1,6 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { spawn } from "node:child_process";
 import type { PackageJson, PackageManagerInfo } from "../types/config.js";
 
 /**
@@ -54,23 +55,6 @@ export function mergeScripts(
   };
 }
 
-/**
- * Merge devDependencies into package.json
- */
-export function mergeDevDependencies(
-  pkg: PackageJson,
-  deps: Record<string, string>
-): PackageJson {
-  const existingDeps = pkg.devDependencies || {};
-
-  return {
-    ...pkg,
-    devDependencies: {
-      ...existingDeps,
-      ...deps,
-    },
-  };
-}
 
 /**
  * Add a config section to package.json (e.g., lint-staged, validate-branch-name)
@@ -105,34 +89,93 @@ export async function updatePackageJson(
 }
 
 /**
- * Core dependencies that RaftStack will always install in the target project
+ * Core packages that RaftStack will install in the target project
  */
-export const RAFTSTACK_DEV_DEPENDENCIES: Record<string, string> = {
+export const RAFTSTACK_PACKAGES: string[] = [
   // Commit tooling
-  "@commitlint/cli": "^19.0.0",
-  "@commitlint/config-conventional": "^19.0.0",
-  "cz-git": "^1.11.0",
-  czg: "^1.11.0",
-  husky: "^9.0.0",
-  "lint-staged": "^16.0.0",
-  "validate-branch-name": "^1.3.0",
+  "@commitlint/cli",
+  "@commitlint/config-conventional",
+  "cz-git",
+  "czg",
+  "husky",
+  "lint-staged",
+  "validate-branch-name",
 
   // Linting & formatting
-  eslint: "^9.0.0",
-  "@eslint/js": "^9.0.0",
-  "typescript-eslint": "^8.0.0",
-  "eslint-config-prettier": "^10.0.0",
-  prettier: "^3.0.0",
-  globals: "^15.0.0",
-};
+  "eslint",
+  "@eslint/js",
+  "typescript-eslint",
+  "eslint-config-prettier",
+  "prettier",
+  "globals",
+];
 
 /**
- * Additional ESLint dependencies for React projects
+ * Additional ESLint packages for React projects
  */
-export const REACT_ESLINT_DEPS: Record<string, string> = {
-  "eslint-plugin-react": "^7.35.0",
-  "eslint-plugin-react-hooks": "^5.0.0",
-};
+export const REACT_ESLINT_PACKAGES: string[] = [
+  "eslint-plugin-react",
+  "eslint-plugin-react-hooks",
+];
+
+/**
+ * Result of package installation
+ */
+export interface InstallResult {
+  success: boolean;
+  error?: string;
+}
+
+/**
+ * Install packages using the package manager CLI
+ */
+export async function installPackages(
+  pm: PackageManagerInfo,
+  packages: string[],
+  targetDir: string
+): Promise<InstallResult> {
+  if (packages.length === 0) {
+    return { success: true };
+  }
+
+  return new Promise((resolve) => {
+    // Build the command: e.g., "pnpm add -D pkg1 pkg2 ..."
+    // addDev is like "install -D" or "add -D"
+    const addDevArgs = pm.addDev.split(" ");
+    const pmCommand = pm.name === "npm" ? "npm" : pm.name.replace("-berry", "");
+    const args = [...addDevArgs, ...packages];
+
+    const child = spawn(pmCommand, args, {
+      cwd: targetDir,
+      stdio: ["ignore", "pipe", "pipe"],
+      shell: process.platform === "win32",
+    });
+
+    let stderr = "";
+
+    child.stderr?.on("data", (data: Buffer) => {
+      stderr += data.toString();
+    });
+
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolve({ success: true });
+      } else {
+        resolve({
+          success: false,
+          error: stderr || `Installation failed with exit code ${code}`,
+        });
+      }
+    });
+
+    child.on("error", (err) => {
+      resolve({
+        success: false,
+        error: err.message,
+      });
+    });
+  });
+}
 
 /**
  * Get package manager-specific scripts

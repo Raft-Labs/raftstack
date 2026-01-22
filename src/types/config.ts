@@ -35,6 +35,9 @@ export interface PackageManagerInfo {
   /** Frozen/immutable install command for CI (e.g., "npm ci") */
   installFrozen: string;
 
+  /** Add dev dependency command (e.g., "install -D" for npm, "add -D" for pnpm/yarn) */
+  addDev: string;
+
   /** Whether this PM needs a setup action in GitHub workflows (pnpm only) */
   needsSetupAction: boolean;
 

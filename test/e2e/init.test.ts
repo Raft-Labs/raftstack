@@ -31,11 +31,9 @@ import {
 // Import utils
 import {
   addPackageJsonConfig,
-  mergeDevDependencies,
   mergeScripts,
   readPackageJson,
   writePackageJson,
-  RAFTSTACK_DEV_DEPENDENCIES,
 } from "../../src/utils/package-json.js";
 
 import type {
@@ -103,12 +101,12 @@ async function runFullInit(
   // Claude Code skills
   results.push(await generateClaudeSkills(targetDir));
 
-  // Update package.json (includes lint-staged config now)
+  // Update package.json with scripts and lint-staged config
+  // Note: devDependencies are installed via CLI in the real init command
   let pkg = await readPackageJson(targetDir);
   pkg = mergeScripts(pkg, { prepare: "husky", commit: "czg" }, false);
-  pkg = mergeDevDependencies(pkg, RAFTSTACK_DEV_DEPENDENCIES);
 
-  // Add lint-staged config to package.json (new approach)
+  // Add lint-staged config to package.json
   const lintStagedConfig = getLintStagedConfig(
     config.usesEslint,
     !config.usesPrettier, // If prettier wasn't configured, we added it
@@ -213,7 +211,7 @@ describe("E2E: Init Command", () => {
       expect(commitMsgStats.mode & 0o111).toBeGreaterThan(0);
     });
 
-    it("should update package.json with scripts and devDependencies", async () => {
+    it("should update package.json with scripts and lint-staged config", async () => {
       await runFullInit(TEST_DIR, {
         projectType: "nx",
         usesTypeScript: true,
@@ -227,9 +225,8 @@ describe("E2E: Init Command", () => {
 
       expect(pkg.scripts).toHaveProperty("prepare", "husky");
       expect(pkg.scripts).toHaveProperty("commit", "czg");
-      expect(pkg.devDependencies).toHaveProperty("husky");
-      expect(pkg.devDependencies).toHaveProperty("@commitlint/cli");
-      expect(pkg.devDependencies).toHaveProperty("cz-git");
+      expect(pkg).toHaveProperty("lint-staged");
+      // Note: devDependencies are installed via CLI in the real init command
     });
   });
 

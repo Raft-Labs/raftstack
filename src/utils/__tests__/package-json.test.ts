@@ -6,9 +6,10 @@ import {
   readPackageJson,
   writePackageJson,
   mergeScripts,
-  mergeDevDependencies,
   addPackageJsonConfig,
   updatePackageJson,
+  RAFTSTACK_PACKAGES,
+  REACT_ESLINT_PACKAGES,
 } from "../package-json.js";
 import type { PackageJson } from "../../types/config.js";
 
@@ -136,50 +137,32 @@ describe("mergeScripts", () => {
   });
 });
 
-describe("mergeDevDependencies", () => {
-  it("should add new devDependencies", () => {
-    const pkg: PackageJson = {
-      devDependencies: {
-        typescript: "^5.0.0",
-      },
-    };
+describe("RAFTSTACK_PACKAGES", () => {
+  it("should contain all core packages as strings without versions", () => {
+    expect(RAFTSTACK_PACKAGES).toContain("@commitlint/cli");
+    expect(RAFTSTACK_PACKAGES).toContain("husky");
+    expect(RAFTSTACK_PACKAGES).toContain("lint-staged");
+    expect(RAFTSTACK_PACKAGES).toContain("eslint");
+    expect(RAFTSTACK_PACKAGES).toContain("prettier");
 
-    const result = mergeDevDependencies(pkg, {
-      vitest: "^1.0.0",
-      eslint: "^8.0.0",
-    });
-
-    expect(result.devDependencies).toEqual({
-      typescript: "^5.0.0",
-      vitest: "^1.0.0",
-      eslint: "^8.0.0",
-    });
+    // Ensure no version numbers in package names
+    for (const pkg of RAFTSTACK_PACKAGES) {
+      expect(pkg).not.toMatch(/@\d/);
+      expect(pkg).not.toMatch(/\^/);
+    }
   });
+});
 
-  it("should overwrite existing devDependencies with new versions", () => {
-    const pkg: PackageJson = {
-      devDependencies: {
-        typescript: "^4.0.0",
-      },
-    };
+describe("REACT_ESLINT_PACKAGES", () => {
+  it("should contain React ESLint packages as strings without versions", () => {
+    expect(REACT_ESLINT_PACKAGES).toContain("eslint-plugin-react");
+    expect(REACT_ESLINT_PACKAGES).toContain("eslint-plugin-react-hooks");
 
-    const result = mergeDevDependencies(pkg, {
-      typescript: "^5.0.0",
-    });
-
-    expect(result.devDependencies?.typescript).toBe("^5.0.0");
-  });
-
-  it("should create devDependencies object if it doesn't exist", () => {
-    const pkg: PackageJson = {};
-
-    const result = mergeDevDependencies(pkg, {
-      typescript: "^5.0.0",
-    });
-
-    expect(result.devDependencies).toEqual({
-      typescript: "^5.0.0",
-    });
+    // Ensure no version numbers in package names
+    for (const pkg of REACT_ESLINT_PACKAGES) {
+      expect(pkg).not.toMatch(/@\d/);
+      expect(pkg).not.toMatch(/\^/);
+    }
   });
 });
 

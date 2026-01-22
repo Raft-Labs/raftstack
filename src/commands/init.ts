@@ -22,12 +22,12 @@ import {
 } from "../generators/index.js";
 import {
   addPackageJsonConfig,
-  mergeDevDependencies,
   mergeScripts,
   readPackageJson,
   writePackageJson,
-  RAFTSTACK_DEV_DEPENDENCIES,
-  REACT_ESLINT_DEPS,
+  installPackages,
+  RAFTSTACK_PACKAGES,
+  REACT_ESLINT_PACKAGES,
 } from "../utils/package-json.js";
 import { isGitRepo } from "../utils/git.js";
 
@@ -47,12 +47,12 @@ function mergeResults(results: GeneratorResult[]): GeneratorResult {
 }
 
 /**
- * Update package.json with required scripts, dependencies, and lint-staged config
+ * Update package.json with required scripts and lint-staged config
+ * (Dependencies are installed separately via CLI)
  */
 async function updateProjectPackageJson(
   targetDir: string,
-  config: RaftStackConfig,
-  usesReact: boolean
+  config: RaftStackConfig
 ): Promise<GeneratorResult> {
   const result: GeneratorResult = {
     created: [],
@@ -70,14 +70,6 @@ async function updateProjectPackageJson(
       commit: "czg",
     };
     pkg = mergeScripts(pkg, scripts, false);
-
-    // Add core dev dependencies
-    pkg = mergeDevDependencies(pkg, RAFTSTACK_DEV_DEPENDENCIES);
-
-    // Add React ESLint deps if React is detected
-    if (usesReact) {
-      pkg = mergeDevDependencies(pkg, REACT_ESLINT_DEPS);
-    }
 
     // Add lint-staged config to package.json (instead of separate file)
     // Always enable eslint and prettier since we're installing them
@@ -127,6 +119,40 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
     return;
   }
 
+  // Detect React for conditional dependencies
+  const usesReact = await detectReact(targetDir);
+
+  // Install dependencies using CLI
+  const installSpinner = p.spinner();
+  const packagesToInstall = usesReact
+    ? [...RAFTSTACK_PACKAGES, ...REACT_ESLINT_PACKAGES]
+    : RAFTSTACK_PACKAGES;
+
+  installSpinner.start("Installing dependencies...");
+  const installResult = await installPackages(
+    config.packageManager,
+    packagesToInstall,
+    targetDir
+  );
+
+  let installFailed = false;
+  if (installResult.success) {
+    installSpinner.stop("Dependencies installed!");
+  } else {
+    installSpinner.stop("Failed to install dependencies");
+    p.log.warn(
+      pc.yellow(
+        `Could not install dependencies automatically: ${installResult.error || "Unknown error"}`
+      )
+    );
+    p.log.info(
+      pc.dim(
+        `You can install them manually with: ${config.packageManager.name} ${config.packageManager.addDev} ${packagesToInstall.join(" ")}`
+      )
+    );
+    installFailed = true;
+  }
+
   // Generate files with progress spinner
   const spinner = p.spinner();
   spinner.start("Generating configuration files...");
@@ -134,9 +160,6 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
   const results: GeneratorResult[] = [];
 
   try {
-    // Detect React for conditional dependencies
-    const usesReact = await detectReact(targetDir);
-
     // Core Git hooks and commit conventions
     results.push(
       await generateHuskyHooks(targetDir, config.projectType, config.packageManager)
@@ -175,8 +198,8 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
     // Claude Code skills for AI-assisted development
     results.push(await generateClaudeSkills(targetDir));
 
-    // Update package.json (includes lint-staged config, dependencies)
-    results.push(await updateProjectPackageJson(targetDir, config, usesReact));
+    // Update package.json (scripts and lint-staged config)
+    results.push(await updateProjectPackageJson(targetDir, config));
 
     spinner.stop("Configuration files generated!");
   } catch (error) {
@@ -228,15 +251,19 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
 
   // Show next steps
   console.log();
-  p.note(
-    [
-      `${pc.cyan("1.")} Run ${pc.yellow(config.packageManager.install)} to install dependencies`,
-      `${pc.cyan("2.")} Review the generated configuration files`,
-      `${pc.cyan("3.")} Use ${pc.yellow(`${config.packageManager.run} commit`)} for interactive commits`,
-      `${pc.cyan("4.")} Set up branch protection rules (see .github/BRANCH_PROTECTION_SETUP.md)`,
-    ].join("\n"),
-    "Next Steps"
-  );
+  const nextSteps = installFailed
+    ? [
+        `${pc.cyan("1.")} Run ${pc.yellow(config.packageManager.install)} to install dependencies`,
+        `${pc.cyan("2.")} Review the generated configuration files`,
+        `${pc.cyan("3.")} Use ${pc.yellow(`${config.packageManager.run} commit`)} for interactive commits`,
+        `${pc.cyan("4.")} Set up branch protection rules (see .github/BRANCH_PROTECTION_SETUP.md)`,
+      ]
+    : [
+        `${pc.cyan("1.")} Review the generated configuration files`,
+        `${pc.cyan("2.")} Use ${pc.yellow(`${config.packageManager.run} commit`)} for interactive commits`,
+        `${pc.cyan("3.")} Set up branch protection rules (see .github/BRANCH_PROTECTION_SETUP.md)`,
+      ];
+  p.note(nextSteps.join("\n"), "Next Steps");
 
   p.outro(pc.green("RaftStack setup complete! Happy coding! 🚀"));
 }

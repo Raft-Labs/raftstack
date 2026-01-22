@@ -30,11 +30,9 @@ import {
 // Import utils
 import {
   addPackageJsonConfig,
-  mergeDevDependencies,
   mergeScripts,
   readPackageJson,
   writePackageJson,
-  RAFTSTACK_DEV_DEPENDENCIES,
 } from "../../utils/package-json.js";
 import { getPackageManagerInfo } from "../../utils/detect-package-manager.js";
 
@@ -105,14 +103,15 @@ describe("Generators Integration", () => {
       expect(updatedPkg).toHaveProperty("lint-staged");
     });
 
-    it("should update package.json with scripts and devDependencies", async () => {
+    it("should update package.json with scripts and lint-staged config", async () => {
       let pkg = await readPackageJson(TEST_DIR);
 
       // Add scripts
       pkg = mergeScripts(pkg, { prepare: "husky", commit: "czg" }, false);
 
-      // Add devDependencies
-      pkg = mergeDevDependencies(pkg, RAFTSTACK_DEV_DEPENDENCIES);
+      // Add lint-staged config (devDependencies are installed via CLI)
+      const lintStagedConfig = getLintStagedConfig(true, true, true);
+      pkg = addPackageJsonConfig(pkg, "lint-staged", lintStagedConfig, true);
 
       await writePackageJson(pkg, TEST_DIR);
 
@@ -121,14 +120,8 @@ describe("Generators Integration", () => {
 
       expect(updated.scripts).toHaveProperty("prepare", "husky");
       expect(updated.scripts).toHaveProperty("commit", "czg");
-      expect(updated.devDependencies).toHaveProperty("husky");
-      expect(updated.devDependencies).toHaveProperty("@commitlint/cli");
-      expect(updated.devDependencies).toHaveProperty("cz-git");
-      expect(updated.devDependencies).toHaveProperty("lint-staged");
-      expect(updated.devDependencies).toHaveProperty("validate-branch-name");
-      // New dependencies
-      expect(updated.devDependencies).toHaveProperty("eslint");
-      expect(updated.devDependencies).toHaveProperty("prettier");
+      expect(updated).toHaveProperty("lint-staged");
+      // Note: devDependencies are installed via CLI in the real init command
     });
   });
 
