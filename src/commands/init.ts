@@ -196,7 +196,9 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
     results.push(await generateQuickReference(targetDir, config.packageManager));
 
     // Claude Code skills for AI-assisted development
-    results.push(await generateClaudeSkills(targetDir));
+    results.push(await generateClaudeSkills(targetDir, {
+      includeAsana: !!config.asanaBaseUrl
+    }));
 
     // Update package.json (scripts and lint-staged config)
     results.push(await updateProjectPackageJson(targetDir, config));

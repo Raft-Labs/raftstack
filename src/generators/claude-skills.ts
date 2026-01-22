@@ -23,19 +23,25 @@ async function copyDirectory(
   srcDir: string,
   destDir: string,
   result: GeneratorResult,
-  baseDir: string
+  baseDir: string,
+  skipDirs?: string[]
 ): Promise<void> {
   await ensureDir(destDir);
 
   const entries = await readdir(srcDir, { withFileTypes: true });
 
   for (const entry of entries) {
+    // Skip directories in the skipDirs list
+    if (skipDirs && entry.isDirectory() && skipDirs.includes(entry.name)) {
+      continue;
+    }
+
     const srcPath = join(srcDir, entry.name);
     const destPath = join(destDir, entry.name);
     const relativePath = destPath.replace(baseDir + "/", "");
 
     if (entry.isDirectory()) {
-      await copyDirectory(srcPath, destPath, result, baseDir);
+      await copyDirectory(srcPath, destPath, result, baseDir, skipDirs);
     } else {
       // Check if destination exists
       if (existsSync(destPath)) {
@@ -60,7 +66,8 @@ async function copyDirectory(
  * enabling AI-assisted code quality enforcement when using Claude Code.
  */
 export async function generateClaudeSkills(
-  targetDir: string
+  targetDir: string,
+  options?: { includeAsana?: boolean }
 ): Promise<GeneratorResult> {
   const result: GeneratorResult = {
     created: [],
@@ -84,8 +91,14 @@ export async function generateClaudeSkills(
   // Ensure target .claude directory exists
   await ensureDir(join(targetDir, ".claude"));
 
-  // Copy all skills
-  await copyDirectory(packageSkillsDir, targetSkillsDir, result, targetDir);
+  // Build list of directories to skip based on options
+  const skipDirs: string[] = [];
+  if (!options?.includeAsana) {
+    skipDirs.push("asana");
+  }
+
+  // Copy all skills (excluding skipped directories)
+  await copyDirectory(packageSkillsDir, targetSkillsDir, result, targetDir, skipDirs);
 
   return result;
 }
