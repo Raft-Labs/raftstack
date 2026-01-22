@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.6.0](https://github.com/Raft-Labs/raftstack/compare/v1.5.0...v1.6.0) (2026-01-22)
+
+
+### Features
+
+* install dependencies via CLI instead of package.json manipulation ([3ebadad](https://github.com/Raft-Labs/raftstack/commit/3ebadada0e4a3ac0bbd526384bd5704ec5f00298))
+
 ### [1.4.2](https://github.com/Raft-Labs/raftstack/compare/v1.4.1...v1.4.2) (2026-01-21)
 
 
