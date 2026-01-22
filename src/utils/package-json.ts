@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { execa } from "execa";
+import spawn from "cross-spawn";
 import type { PackageJson, PackageManagerInfo } from "../types/config.js";
 
 /**
@@ -127,10 +127,18 @@ export interface InstallResult {
 }
 
 /**
+ * Check if directory is a pnpm workspace root
+ */
+function isPnpmWorkspace(targetDir: string): boolean {
+  return existsSync(join(targetDir, "pnpm-workspace.yaml"));
+}
+
+/**
  * Install packages using the package manager CLI
  *
- * Uses execa instead of spawn for better PATH resolution,
- * especially when running via `pnpm dlx` or `npx`.
+ * Uses cross-spawn with shell: true for reliable PATH resolution
+ * in sandboxed environments (pnpm dlx, npx). This is the industry
+ * standard approach used by create-next-app, create-vite, etc.
  */
 export async function installPackages(
   pm: PackageManagerInfo,
@@ -141,25 +149,46 @@ export async function installPackages(
     return { success: true };
   }
 
-  try {
+  return new Promise((resolve) => {
     // Build the command: e.g., "pnpm add -D pkg1 pkg2 ..."
-    // addDev is like "install -D" or "add -D"
-    const addDevArgs = pm.addDev.split(" ");
     const pmCommand = pm.name === "npm" ? "npm" : pm.name.replace("-berry", "");
-    const args = [...addDevArgs, ...packages];
+    const parts = [pmCommand, ...pm.addDev.split(" ")];
 
-    await execa(pmCommand, args, {
+    // For pnpm workspaces, add -w flag to install at workspace root
+    if (pm.name === "pnpm" && isPnpmWorkspace(targetDir)) {
+      parts.push("-w");
+    }
+
+    parts.push(...packages);
+
+    // Join as single command string to avoid Node.js deprecation warning
+    // about passing args with shell: true
+    const fullCommand = parts.join(" ");
+
+    const child = spawn(fullCommand, [], {
       cwd: targetDir,
       stdio: "inherit", // Show install progress to user
+      shell: true, // Key: use shell to resolve PATH in sandboxed envs
     });
 
-    return { success: true };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolve({ success: true });
+      } else {
+        resolve({
+          success: false,
+          error: `Installation failed with exit code ${code}`,
+        });
+      }
+    });
+
+    child.on("error", (err) => {
+      resolve({
+        success: false,
+        error: err.message,
+      });
+    });
+  });
 }
 
 /**
