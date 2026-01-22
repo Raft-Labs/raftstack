@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.1](https://github.com/Raft-Labs/raftstack/compare/v1.6.0...v1.6.1) (2026-01-22)
+
+
+### Bug Fixes
+
+* use execa for package installation to fix pnpm dlx compatibility ([77876cc](https://github.com/Raft-Labs/raftstack/commit/77876cc9d8b005d2dde93c5bd17c3cd4892c464a))
+
 ## [1.6.0](https://github.com/Raft-Labs/raftstack/compare/v1.5.0...v1.6.0) (2026-01-22)
 
 
