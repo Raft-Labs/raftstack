@@ -84,6 +84,16 @@ export default tseslint.config(
     },
   },
   {
+    // CommonJS config files (cz.config.js, commitlint.config.js, etc.)
+    files: ["*.config.js", "*.config.cjs"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      sourceType: "commonjs",
+    },
+  },
+  {
     ignores: ["node_modules/", "dist/", "build/", ".next/", "coverage/", ".turbo/"],
   }
 );
@@ -120,6 +130,16 @@ export default tseslint.config(
 
       // General rules
       "no-console": ["warn", { allow: ["warn", "error"] }],
+    },
+  },
+  {
+    // CommonJS config files (cz.config.js, commitlint.config.js, etc.)
+    files: ["*.config.js", "*.config.cjs"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      sourceType: "commonjs",
     },
   },
   {
@@ -180,6 +200,16 @@ export default [
     },
   },
   {
+    // CommonJS config files (cz.config.js, commitlint.config.js, etc.)
+    files: ["*.config.js", "*.config.cjs"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      sourceType: "commonjs",
+    },
+  },
+  {
     ignores: ["node_modules/", "dist/", "build/", ".next/", "coverage/", ".turbo/"],
   },
 ];
@@ -206,6 +236,16 @@ export default [
       // General rules
       "no-console": ["warn", { allow: ["warn", "error"] }],
       "no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+    },
+  },
+  {
+    // CommonJS config files (cz.config.js, commitlint.config.js, etc.)
+    files: ["*.config.js", "*.config.cjs"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+      sourceType: "commonjs",
     },
   },
   {
