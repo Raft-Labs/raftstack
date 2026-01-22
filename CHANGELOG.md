@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.3](https://github.com/Raft-Labs/raftstack/compare/v1.6.1...v1.6.3) (2026-01-22)
+
+
+### Bug Fixes
+
+* add CommonJS support for config files in ESLint generator ([a611cfe](https://github.com/Raft-Labs/raftstack/commit/a611cfe5441345b1fd0d16cf0f7e15dae8c5ad9f))
+* use cross-spawn with shell mode for pnpm dlx/npx compatibility ([cf05f40](https://github.com/Raft-Labs/raftstack/commit/cf05f40c48dd462c545a7612c7ecccbde3eeec67))
+
 ### [1.6.2](https://github.com/Raft-Labs/raftstack/compare/v1.6.1...v1.6.2) (2026-01-22)
 
 
