@@ -1,6 +1,6 @@
 {
   "name": "@raftlabs/raftstack",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "CLI tool for setting up Git hooks, commit conventions, and GitHub integration",
   "type": "module",
   "main": "./dist/index.js",

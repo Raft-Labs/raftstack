@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.6.2](https://github.com/Raft-Labs/raftstack/compare/v1.6.1...v1.6.2) (2026-01-22)
+
+
+### Bug Fixes
+
+* use cross-spawn with shell mode for pnpm dlx/npx compatibility ([cf05f40](https://github.com/Raft-Labs/raftstack/commit/cf05f40c48dd462c545a7612c7ecccbde3eeec67))
+
 ### [1.6.1](https://github.com/Raft-Labs/raftstack/compare/v1.6.0...v1.6.1) (2026-01-22)
 
 
