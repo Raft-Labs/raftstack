@@ -6,7 +6,7 @@ import {
   generateHuskyHooks,
   generateCommitlint,
   generateCzGit,
-  generateLintStaged,
+  getLintStagedConfig,
   generateBranchValidation,
   generatePRTemplate,
   generateGitHubWorkflows,
@@ -17,13 +17,17 @@ import {
   generatePrettier,
   generateClaudeSkills,
   generateQuickReference,
+  generateEslint,
+  detectReact,
 } from "../generators/index.js";
 import {
+  addPackageJsonConfig,
   mergeDevDependencies,
   mergeScripts,
   readPackageJson,
   writePackageJson,
   RAFTSTACK_DEV_DEPENDENCIES,
+  REACT_ESLINT_DEPS,
 } from "../utils/package-json.js";
 import { isGitRepo } from "../utils/git.js";
 
@@ -43,11 +47,12 @@ function mergeResults(results: GeneratorResult[]): GeneratorResult {
 }
 
 /**
- * Update package.json with required scripts and dependencies
+ * Update package.json with required scripts, dependencies, and lint-staged config
  */
 async function updateProjectPackageJson(
   targetDir: string,
-  _config: RaftStackConfig
+  config: RaftStackConfig,
+  usesReact: boolean
 ): Promise<GeneratorResult> {
   const result: GeneratorResult = {
     created: [],
@@ -64,11 +69,24 @@ async function updateProjectPackageJson(
       prepare: "husky",
       commit: "czg",
     };
-
     pkg = mergeScripts(pkg, scripts, false);
 
-    // Add dev dependencies
+    // Add core dev dependencies
     pkg = mergeDevDependencies(pkg, RAFTSTACK_DEV_DEPENDENCIES);
+
+    // Add React ESLint deps if React is detected
+    if (usesReact) {
+      pkg = mergeDevDependencies(pkg, REACT_ESLINT_DEPS);
+    }
+
+    // Add lint-staged config to package.json (instead of separate file)
+    // Always enable eslint and prettier since we're installing them
+    const lintStagedConfig = getLintStagedConfig(
+      true, // usesEslint - always true now since we install it
+      true, // usesPrettier - always true now since we install it
+      config.usesTypeScript
+    );
+    pkg = addPackageJsonConfig(pkg, "lint-staged", lintStagedConfig, true);
 
     await writePackageJson(pkg, targetDir);
     result.modified.push("package.json");
@@ -116,27 +134,22 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
   const results: GeneratorResult[] = [];
 
   try {
+    // Detect React for conditional dependencies
+    const usesReact = await detectReact(targetDir);
+
     // Core Git hooks and commit conventions
     results.push(
       await generateHuskyHooks(targetDir, config.projectType, config.packageManager)
     );
     results.push(await generateCommitlint(targetDir, config.asanaBaseUrl));
     results.push(await generateCzGit(targetDir, config.asanaBaseUrl));
-    results.push(
-      await generateLintStaged(
-        targetDir,
-        config.projectType,
-        config.usesEslint,
-        config.usesPrettier,
-        config.usesTypeScript
-      )
-    );
     results.push(await generateBranchValidation(targetDir));
 
-    // Prettier (only if not already configured)
-    if (!config.usesPrettier) {
-      results.push(await generatePrettier(targetDir));
-    }
+    // ESLint configuration (always generate since we install it)
+    results.push(await generateEslint(targetDir, config.usesTypeScript, false));
+
+    // Prettier (always generate since we install it)
+    results.push(await generatePrettier(targetDir));
 
     // GitHub integration
     results.push(await generatePRTemplate(targetDir, !!config.asanaBaseUrl));
@@ -145,7 +158,7 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
         targetDir,
         config.projectType,
         config.usesTypeScript,
-        config.usesEslint,
+        true, // usesEslint - always true now
         config.packageManager
       )
     );
@@ -162,8 +175,8 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
     // Claude Code skills for AI-assisted development
     results.push(await generateClaudeSkills(targetDir));
 
-    // Update package.json
-    results.push(await updateProjectPackageJson(targetDir, config));
+    // Update package.json (includes lint-staged config, dependencies)
+    results.push(await updateProjectPackageJson(targetDir, config, usesReact));
 
     spinner.stop("Configuration files generated!");
   } catch (error) {

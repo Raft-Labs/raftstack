@@ -1,103 +1,70 @@
-import { join } from "node:path";
-import type { GeneratorResult, ProjectType } from "../types/config.js";
-import { writeFileSafe } from "../utils/file-system.js";
+import type { GeneratorResult } from "../types/config.js";
 
 /**
- * Generate lint-staged configuration based on project type
+ * Lint-staged configuration type for package.json
  */
-function getLintStagedConfig(
-  projectType: ProjectType,
+export type LintStagedConfig = Record<string, string | string[]>;
+
+/**
+ * Generate lint-staged configuration for package.json (matching zero-to-one pattern)
+ *
+ * This function returns a configuration object to be added to package.json
+ * instead of creating a separate file.
+ */
+export function getLintStagedConfig(
   usesEslint: boolean,
   usesPrettier: boolean,
   usesTypeScript: boolean
-): string {
-  const rules: Record<string, string | string[]> = {};
+): LintStagedConfig {
+  const config: LintStagedConfig = {};
 
-  // TypeScript/JavaScript files
+  // Determine which file patterns to lint
+  const codePatterns: string[] = [];
+
   if (usesTypeScript) {
-    const tsCommands: string[] = [];
-    if (usesEslint) {
-      tsCommands.push("eslint --fix");
-    }
-    if (usesPrettier) {
-      tsCommands.push("prettier --write");
-    }
-    if (tsCommands.length > 0) {
-      rules["*.{ts,tsx}"] = tsCommands;
-    }
+    codePatterns.push("ts", "mts", "cts", "tsx");
   }
+  // Always include JavaScript patterns
+  codePatterns.push("js", "mjs", "cjs", "jsx");
 
-  // JavaScript files
-  const jsCommands: string[] = [];
+  // Build commands for code files
+  const codeCommands: string[] = [];
   if (usesEslint) {
-    jsCommands.push("eslint --fix");
+    codeCommands.push("eslint --fix");
   }
   if (usesPrettier) {
-    jsCommands.push("prettier --write");
-  }
-  if (jsCommands.length > 0) {
-    rules["*.{js,jsx,mjs,cjs}"] = jsCommands;
+    codeCommands.push("prettier --write");
   }
 
-  // JSON, MD, YAML files (Prettier only)
+  // Add code file pattern if we have any commands
+  if (codeCommands.length > 0) {
+    const pattern = `*.{${codePatterns.join(",")}}`;
+    config[pattern] = codeCommands;
+  }
+
+  // Add non-code files for Prettier only
   if (usesPrettier) {
-    rules["*.{json,md,yaml,yml}"] = "prettier --write";
+    config["*.{json,css,md}"] = ["prettier --write"];
   }
 
-  // CSS/SCSS files
-  if (usesPrettier) {
-    rules["*.{css,scss,less}"] = "prettier --write";
-  }
-
-  // NX-specific configuration
-  if (projectType === "nx") {
-    return `// @ts-check
-
-/**
- * @type {import('lint-staged').Config}
- */
-module.exports = {
-${Object.entries(rules)
-  .map(([pattern, commands]) => {
-    const cmdStr = Array.isArray(commands)
-      ? JSON.stringify(commands)
-      : JSON.stringify([commands]);
-    return `  '${pattern}': ${cmdStr},`;
-  })
-  .join("\n")}
-};
-`;
-  }
-
-  // Standard configuration
-  return `// @ts-check
-
-/**
- * @type {import('lint-staged').Config}
- */
-module.exports = {
-${Object.entries(rules)
-  .map(([pattern, commands]) => {
-    const cmdStr = Array.isArray(commands)
-      ? JSON.stringify(commands)
-      : JSON.stringify([commands]);
-    return `  '${pattern}': ${cmdStr},`;
-  })
-  .join("\n")}
-};
-`;
+  return config;
 }
 
 /**
- * Generate lint-staged configuration file
+ * Generate lint-staged configuration
+ *
+ * Note: This generator doesn't create files - instead it returns a GeneratorResult
+ * and the config should be merged into package.json by the init command.
+ *
+ * @deprecated Use getLintStagedConfig() instead and merge into package.json
  */
 export async function generateLintStaged(
-  targetDir: string,
-  projectType: ProjectType,
+  _targetDir: string,
+  _projectType: string,
   usesEslint: boolean,
   usesPrettier: boolean,
   usesTypeScript: boolean
-): Promise<GeneratorResult> {
+): Promise<GeneratorResult & { config: LintStagedConfig }> {
   const result: GeneratorResult = {
     created: [],
     modified: [],
@@ -105,19 +72,13 @@ export async function generateLintStaged(
     backedUp: [],
   };
 
-  const configPath = join(targetDir, ".lintstagedrc.js");
-  const writeResult = await writeFileSafe(
-    configPath,
-    getLintStagedConfig(projectType, usesEslint, usesPrettier, usesTypeScript),
-    { backup: true }
-  );
+  const config = getLintStagedConfig(usesEslint, usesPrettier, usesTypeScript);
 
-  if (writeResult.created) {
-    result.created.push(".lintstagedrc.js");
-    if (writeResult.backedUp) {
-      result.backedUp.push(writeResult.backedUp);
-    }
-  }
+  // Note: The actual addition to package.json is handled by init.ts
+  // This function now just returns the config
 
-  return result;
+  return {
+    ...result,
+    config,
+  };
 }

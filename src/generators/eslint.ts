@@ -24,19 +24,21 @@ async function hasReact(targetDir: string): Promise<boolean> {
 }
 
 /**
- * Generate ESLint flat config content for TypeScript projects
+ * Generate ESLint flat config content for TypeScript projects (matching zero-to-one pattern)
  */
 function generateTsConfig(hasReactDep: boolean): string {
   if (hasReactDep) {
     return `import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
+import eslintConfigPrettier from "eslint-config-prettier";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
 import globals from "globals";
 
 export default tseslint.config(
   eslint.configs.recommended,
-  ...tseslint.configs.recommended,
+  ...tseslint.configs.strict,
+  eslintConfigPrettier,
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
@@ -56,9 +58,15 @@ export default tseslint.config(
     },
     rules: {
       // TypeScript rules
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/consistent-type-imports": "error",
+      "@typescript-eslint/consistent-type-imports": [
+        "warn",
+        { prefer: "type-imports" },
+      ],
 
       // React rules
       "react/react-in-jsx-scope": "off",
@@ -67,7 +75,7 @@ export default tseslint.config(
       "react-hooks/exhaustive-deps": "warn",
 
       // General rules
-      "no-console": "warn",
+      "no-console": ["warn", { allow: ["warn", "error"] }],
     },
     settings: {
       react: {
@@ -76,7 +84,7 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["node_modules", "dist", "build", ".next", "coverage"],
+    ignores: ["node_modules/", "dist/", "build/", ".next/", "coverage/", ".turbo/"],
   }
 );
 `;
@@ -84,11 +92,13 @@ export default tseslint.config(
 
   return `import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
+import eslintConfigPrettier from "eslint-config-prettier";
 import globals from "globals";
 
 export default tseslint.config(
   eslint.configs.recommended,
-  ...tseslint.configs.recommended,
+  ...tseslint.configs.strict,
+  eslintConfigPrettier,
   {
     files: ["**/*.{ts,tsx}"],
     languageOptions: {
@@ -98,16 +108,22 @@ export default tseslint.config(
     },
     rules: {
       // TypeScript rules
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/consistent-type-imports": "error",
+      "@typescript-eslint/consistent-type-imports": [
+        "warn",
+        { prefer: "type-imports" },
+      ],
 
       // General rules
-      "no-console": "warn",
+      "no-console": ["warn", { allow: ["warn", "error"] }],
     },
   },
   {
-    ignores: ["node_modules", "dist", "build", "coverage"],
+    ignores: ["node_modules/", "dist/", "build/", "coverage/", ".turbo/"],
   }
 );
 `;
@@ -119,12 +135,14 @@ export default tseslint.config(
 function generateJsConfig(hasReactDep: boolean): string {
   if (hasReactDep) {
     return `import eslint from "@eslint/js";
+import eslintConfigPrettier from "eslint-config-prettier";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
 import globals from "globals";
 
 export default [
   eslint.configs.recommended,
+  eslintConfigPrettier,
   {
     files: ["**/*.{js,jsx}"],
     languageOptions: {
@@ -152,8 +170,8 @@ export default [
       "react-hooks/exhaustive-deps": "warn",
 
       // General rules
-      "no-console": "warn",
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
     },
     settings: {
       react: {
@@ -162,17 +180,19 @@ export default [
     },
   },
   {
-    ignores: ["node_modules", "dist", "build", ".next", "coverage"],
+    ignores: ["node_modules/", "dist/", "build/", ".next/", "coverage/", ".turbo/"],
   },
 ];
 `;
   }
 
   return `import eslint from "@eslint/js";
+import eslintConfigPrettier from "eslint-config-prettier";
 import globals from "globals";
 
 export default [
   eslint.configs.recommended,
+  eslintConfigPrettier,
   {
     files: ["**/*.js"],
     languageOptions: {
@@ -184,40 +204,22 @@ export default [
     },
     rules: {
       // General rules
-      "no-console": "warn",
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "no-console": ["warn", { allow: ["warn", "error"] }],
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
     },
   },
   {
-    ignores: ["node_modules", "dist", "build", "coverage"],
+    ignores: ["node_modules/", "dist/", "build/", "coverage/", ".turbo/"],
   },
 ];
 `;
 }
 
 /**
- * Get the ESLint dependencies to add to package.json
+ * Check if project uses React (exported for use by other modules)
  */
-export function getEslintDependencies(
-  usesTypeScript: boolean,
-  usesReact: boolean
-): Record<string, string> {
-  const deps: Record<string, string> = {
-    eslint: "^9.0.0",
-    "@eslint/js": "^9.0.0",
-    globals: "^15.0.0",
-  };
-
-  if (usesTypeScript) {
-    deps["typescript-eslint"] = "^8.0.0";
-  }
-
-  if (usesReact) {
-    deps["eslint-plugin-react"] = "^7.35.0";
-    deps["eslint-plugin-react-hooks"] = "^5.0.0";
-  }
-
-  return deps;
+export async function detectReact(targetDir: string): Promise<boolean> {
+  return hasReact(targetDir);
 }
 
 /**

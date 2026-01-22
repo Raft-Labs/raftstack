@@ -3,54 +3,39 @@ import type { GeneratorResult } from "../types/config.js";
 import { fileExists, writeFileSafe } from "../utils/file-system.js";
 
 /**
- * Get Prettier configuration
+ * Get Prettier configuration (matching zero-to-one project pattern)
  */
 function getPrettierConfig(): string {
-  return JSON.stringify(
-    {
-      semi: true,
-      singleQuote: true,
-      tabWidth: 2,
-      trailingComma: "es5",
-      printWidth: 100,
-      bracketSpacing: true,
-      arrowParens: "always",
-      endOfLine: "lf",
-    },
-    null,
-    2
-  ) + "\n";
+  return (
+    JSON.stringify(
+      {
+        semi: true,
+        trailingComma: "es5",
+        singleQuote: false,
+        printWidth: 80,
+        tabWidth: 2,
+        useTabs: false,
+        arrowParens: "always",
+        endOfLine: "lf",
+      },
+      null,
+      2
+    ) + "\n"
+  );
 }
 
 /**
- * Get Prettier ignore file content
+ * Get Prettier ignore file content (matching zero-to-one project pattern)
  */
 function getPrettierIgnore(): string {
-  return `# Dependencies
-node_modules/
-
-# Build output
-dist/
-build/
-.next/
-out/
-
-# Coverage
-coverage/
-
-# IDE
-.idea/
-.vscode/
-
-# Generated files
-*.min.js
-*.min.css
-package-lock.json
+  return `node_modules
+dist
+build
+.turbo
+.next
+*.lock
 pnpm-lock.yaml
-yarn.lock
-
-# Other
-.git/
+coverage
 `;
 }
 

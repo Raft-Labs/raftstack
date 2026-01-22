@@ -4,14 +4,16 @@ import { writeFileSafe } from "../utils/file-system.js";
 
 /**
  * Generate commitlint configuration
+ *
+ * Uses ES module syntax (export default) for compatibility with
+ * projects that have "type": "module" in package.json.
+ *
  * Note: Asana task link uses level 1 (warning) not level 2 (error)
  * Commits without task links will show a warning but won't be blocked
  */
 function getCommitlintConfig(asanaBaseUrl?: string): string {
-  const baseConfig = `// @ts-check
-
-/** @type {import('@commitlint/types').UserConfig} */
-const config = {
+  const baseConfig = `/** @type {import('@commitlint/types').UserConfig} */
+export default {
   extends: ['@commitlint/config-conventional'],
   rules: {
     // Type must be one of the conventional types
@@ -39,12 +41,14 @@ const config = {
     // Subject should be lowercase
     'subject-case': [2, 'always', 'lower-case'],
     // Header max length
-    'header-max-length': [2, 'always', 100],
-  },`;
+    'header-max-length': [2, 'always', 100],`;
 
   if (asanaBaseUrl) {
     // Add Asana task link validation as a WARNING (level 1), not error (level 2)
     return `${baseConfig}
+    // Asana task link (warning only - won't block commits)
+    'asana-task-link': [1, 'always'],
+  },
   plugins: [
     {
       rules: {
@@ -63,19 +67,12 @@ const config = {
     },
   ],
 };
-
-// Enable the Asana task link rule as a WARNING (level 1)
-// Change to level 2 if you want to BLOCK commits without Asana links
-config.rules['asana-task-link'] = [1, 'always'];
-
-module.exports = config;
 `;
   }
 
   return `${baseConfig}
+  },
 };
-
-module.exports = config;
 `;
 }
 

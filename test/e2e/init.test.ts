@@ -16,7 +16,7 @@ import {
   generateHuskyHooks,
   generateCommitlint,
   generateCzGit,
-  generateLintStaged,
+  getLintStagedConfig,
   generateBranchValidation,
   generatePRTemplate,
   generateGitHubWorkflows,
@@ -30,6 +30,7 @@ import {
 
 // Import utils
 import {
+  addPackageJsonConfig,
   mergeDevDependencies,
   mergeScripts,
   readPackageJson,
@@ -37,7 +38,11 @@ import {
   RAFTSTACK_DEV_DEPENDENCIES,
 } from "../../src/utils/package-json.js";
 
-import type { GeneratorResult, ProjectType, AIReviewTool } from "../../src/types/config.js";
+import type {
+  GeneratorResult,
+  ProjectType,
+  AIReviewTool,
+} from "../../src/types/config.js";
 import { getPackageManagerInfo } from "../../src/utils/detect-package-manager.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -70,15 +75,6 @@ async function runFullInit(
   results.push(await generateHuskyHooks(targetDir, config.projectType, pm));
   results.push(await generateCommitlint(targetDir, config.asanaBaseUrl));
   results.push(await generateCzGit(targetDir, config.asanaBaseUrl));
-  results.push(
-    await generateLintStaged(
-      targetDir,
-      config.projectType,
-      config.usesEslint,
-      config.usesPrettier,
-      config.usesTypeScript
-    )
-  );
   results.push(await generateBranchValidation(targetDir));
 
   // Prettier (only if not already configured)
@@ -107,10 +103,19 @@ async function runFullInit(
   // Claude Code skills
   results.push(await generateClaudeSkills(targetDir));
 
-  // Update package.json
+  // Update package.json (includes lint-staged config now)
   let pkg = await readPackageJson(targetDir);
   pkg = mergeScripts(pkg, { prepare: "husky", commit: "czg" }, false);
   pkg = mergeDevDependencies(pkg, RAFTSTACK_DEV_DEPENDENCIES);
+
+  // Add lint-staged config to package.json (new approach)
+  const lintStagedConfig = getLintStagedConfig(
+    config.usesEslint,
+    !config.usesPrettier, // If prettier wasn't configured, we added it
+    config.usesTypeScript
+  );
+  pkg = addPackageJsonConfig(pkg, "lint-staged", lintStagedConfig, true);
+
   await writePackageJson(pkg, targetDir);
   results.push({
     created: [],
@@ -146,7 +151,9 @@ describe("E2E: Init Command", () => {
     if (TEST_DIR && existsSync(TEST_DIR)) {
       try {
         rmSync(TEST_DIR, { recursive: true, force: true });
-      } catch {}
+      } catch {
+        // Ignore cleanup errors
+      }
     }
   });
 
@@ -170,10 +177,15 @@ describe("E2E: Init Command", () => {
       expect(existsSync(join(TEST_DIR, ".husky", "commit-msg"))).toBe(true);
       expect(existsSync(join(TEST_DIR, "commitlint.config.js"))).toBe(true);
       expect(existsSync(join(TEST_DIR, ".czrc"))).toBe(true);
-      expect(existsSync(join(TEST_DIR, ".lintstagedrc.js"))).toBe(true);
       expect(existsSync(join(TEST_DIR, ".prettierrc"))).toBe(true);
-      expect(existsSync(join(TEST_DIR, ".github", "workflows", "pr-checks.yml"))).toBe(true);
+      expect(existsSync(join(TEST_DIR, ".github", "workflows", "pr-checks.yml"))).toBe(
+        true
+      );
       expect(existsSync(join(TEST_DIR, "CONTRIBUTING.md"))).toBe(true);
+
+      // Verify lint-staged config is in package.json
+      const pkg = JSON.parse(readFileSync(join(TEST_DIR, "package.json"), "utf-8"));
+      expect(pkg).toHaveProperty("lint-staged");
 
       // Verify NX-specific workflow content
       const workflow = readFileSync(
@@ -447,11 +459,7 @@ describe("E2E: Init Command", () => {
         aiReviewTool: "none",
       });
 
-      const hooks = [
-        ".husky/pre-commit",
-        ".husky/commit-msg",
-        ".husky/pre-push",
-      ];
+      const hooks = [".husky/pre-commit", ".husky/commit-msg", ".husky/pre-push"];
 
       for (const hook of hooks) {
         const hookPath = join(TEST_DIR, hook);

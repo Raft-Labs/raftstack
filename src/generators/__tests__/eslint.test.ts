@@ -1,8 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { readFileSync, writeFileSync, mkdtempSync, rmSync, existsSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  mkdtempSync,
+  rmSync,
+  existsSync,
+} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { generateEslint, getEslintDependencies } from "../eslint.js";
+import { generateEslint, detectReact } from "../eslint.js";
 
 let TEST_DIR: string;
 
@@ -19,7 +25,9 @@ describe("generateEslint", () => {
   afterEach(() => {
     try {
       rmSync(TEST_DIR, { recursive: true, force: true });
-    } catch {}
+    } catch {
+      // Ignore cleanup errors
+    }
   });
 
   it("should create eslint.config.js", async () => {
@@ -34,7 +42,9 @@ describe("generateEslint", () => {
 
     const result = await generateEslint(TEST_DIR, true);
 
-    expect(result.skipped).toContain("eslint.config.js (ESLint already configured)");
+    expect(result.skipped).toContain(
+      "eslint.config.js (ESLint already configured)"
+    );
     expect(result.created).not.toContain("eslint.config.js");
   });
 
@@ -100,6 +110,28 @@ describe("generateEslint", () => {
     expect(content).toContain("coverage");
   });
 
+  it("should include strict TypeScript rules", async () => {
+    await generateEslint(TEST_DIR, true);
+
+    const content = readFileSync(join(TEST_DIR, "eslint.config.js"), "utf-8");
+    // Should use strict config
+    expect(content).toContain("tseslint.configs.strict");
+  });
+
+  it("should include eslint-config-prettier", async () => {
+    await generateEslint(TEST_DIR, true);
+
+    const content = readFileSync(join(TEST_DIR, "eslint.config.js"), "utf-8");
+    expect(content).toContain("eslint-config-prettier");
+  });
+
+  it("should include consistent-type-imports rule", async () => {
+    await generateEslint(TEST_DIR, true);
+
+    const content = readFileSync(join(TEST_DIR, "eslint.config.js"), "utf-8");
+    expect(content).toContain("@typescript-eslint/consistent-type-imports");
+  });
+
   it("should backup existing eslint.config.js", async () => {
     writeFileSync(join(TEST_DIR, "eslint.config.js"), "// old config");
 
@@ -119,37 +151,73 @@ describe("generateEslint", () => {
   });
 });
 
-describe("getEslintDependencies", () => {
-  it("should return base dependencies for JavaScript projects", () => {
-    const deps = getEslintDependencies(false, false);
-
-    expect(deps).toHaveProperty("eslint");
-    expect(deps).toHaveProperty("@eslint/js");
-    expect(deps).toHaveProperty("globals");
-    expect(deps).not.toHaveProperty("typescript-eslint");
+describe("detectReact", () => {
+  beforeEach(() => {
+    TEST_DIR = mkdtempSync(join(tmpdir(), "raftstack-test-"));
   });
 
-  it("should include TypeScript dependencies for TypeScript projects", () => {
-    const deps = getEslintDependencies(true, false);
-
-    expect(deps).toHaveProperty("typescript-eslint");
+  afterEach(() => {
+    try {
+      rmSync(TEST_DIR, { recursive: true, force: true });
+    } catch {
+      // Ignore cleanup errors
+    }
   });
 
-  it("should include React dependencies for React projects", () => {
-    const deps = getEslintDependencies(false, true);
+  it("should return true when react is in dependencies", async () => {
+    writeFileSync(
+      join(TEST_DIR, "package.json"),
+      JSON.stringify({
+        name: "test",
+        dependencies: { react: "^18.0.0" },
+      })
+    );
 
-    expect(deps).toHaveProperty("eslint-plugin-react");
-    expect(deps).toHaveProperty("eslint-plugin-react-hooks");
+    const result = await detectReact(TEST_DIR);
+    expect(result).toBe(true);
   });
 
-  it("should include all dependencies for TypeScript + React projects", () => {
-    const deps = getEslintDependencies(true, true);
+  it("should return true when react-dom is in dependencies", async () => {
+    writeFileSync(
+      join(TEST_DIR, "package.json"),
+      JSON.stringify({
+        name: "test",
+        dependencies: { "react-dom": "^18.0.0" },
+      })
+    );
 
-    expect(deps).toHaveProperty("eslint");
-    expect(deps).toHaveProperty("@eslint/js");
-    expect(deps).toHaveProperty("globals");
-    expect(deps).toHaveProperty("typescript-eslint");
-    expect(deps).toHaveProperty("eslint-plugin-react");
-    expect(deps).toHaveProperty("eslint-plugin-react-hooks");
+    const result = await detectReact(TEST_DIR);
+    expect(result).toBe(true);
+  });
+
+  it("should return true when react is in devDependencies", async () => {
+    writeFileSync(
+      join(TEST_DIR, "package.json"),
+      JSON.stringify({
+        name: "test",
+        devDependencies: { react: "^18.0.0" },
+      })
+    );
+
+    const result = await detectReact(TEST_DIR);
+    expect(result).toBe(true);
+  });
+
+  it("should return false when react is not present", async () => {
+    writeFileSync(
+      join(TEST_DIR, "package.json"),
+      JSON.stringify({
+        name: "test",
+        dependencies: { express: "^4.0.0" },
+      })
+    );
+
+    const result = await detectReact(TEST_DIR);
+    expect(result).toBe(false);
+  });
+
+  it("should return false when package.json does not exist", async () => {
+    const result = await detectReact(TEST_DIR);
+    expect(result).toBe(false);
   });
 });

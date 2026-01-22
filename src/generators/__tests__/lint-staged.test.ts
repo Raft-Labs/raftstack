@@ -1,115 +1,149 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
-import { join } from "node:path";
-import { tmpdir } from "node:os";
-import { generateLintStaged } from "../lint-staged.js";
+import { describe, it, expect } from "vitest";
+import { getLintStagedConfig, generateLintStaged } from "../lint-staged.js";
 
-let TEST_DIR: string;
+describe("getLintStagedConfig", () => {
+  it("should return config object for package.json", () => {
+    const config = getLintStagedConfig(true, true, true);
 
-describe("generateLintStaged", () => {
-  beforeEach(() => {
-    TEST_DIR = mkdtempSync(join(tmpdir(), "raftstack-test-"));
+    expect(typeof config).toBe("object");
+    expect(config).not.toBeNull();
   });
 
-  afterEach(() => {
-    try {
-      rmSync(TEST_DIR, { recursive: true, force: true });
-    } catch {}
+  it("should include TypeScript patterns when usesTypeScript is true", () => {
+    const config = getLintStagedConfig(true, true, true);
+
+    // Should have a pattern that includes ts, tsx
+    const patterns = Object.keys(config);
+    const hasTypeScriptPattern = patterns.some(
+      (p) => p.includes("ts") && p.includes("tsx")
+    );
+    expect(hasTypeScriptPattern).toBe(true);
   });
 
-  it("should create .lintstagedrc.js", async () => {
-    const result = await generateLintStaged(TEST_DIR, "single", true, true, true);
+  it("should include JavaScript patterns when usesTypeScript is false", () => {
+    const config = getLintStagedConfig(true, true, false);
 
-    expect(result.created).toContain(".lintstagedrc.js");
+    const patterns = Object.keys(config);
+    const hasJsPattern = patterns.some((p) => p.includes("js"));
+    expect(hasJsPattern).toBe(true);
   });
 
-  it("should include ESLint when enabled", async () => {
-    await generateLintStaged(TEST_DIR, "single", true, false, true);
+  it("should include ESLint command when usesEslint is true", () => {
+    const config = getLintStagedConfig(true, false, true);
 
-    const content = readFileSync(join(TEST_DIR, ".lintstagedrc.js"), "utf-8");
-    expect(content).toContain("eslint --fix");
+    const commands = Object.values(config).flat();
+    expect(commands).toContain("eslint --fix");
   });
 
-  it("should include Prettier when enabled", async () => {
-    await generateLintStaged(TEST_DIR, "single", false, true, true);
+  it("should not include ESLint command when usesEslint is false", () => {
+    const config = getLintStagedConfig(false, true, true);
 
-    const content = readFileSync(join(TEST_DIR, ".lintstagedrc.js"), "utf-8");
-    expect(content).toContain("prettier --write");
+    const commands = Object.values(config).flat();
+    expect(commands).not.toContain("eslint --fix");
   });
 
-  it("should include TypeScript patterns when enabled", async () => {
-    await generateLintStaged(TEST_DIR, "single", true, true, true);
+  it("should include Prettier command when usesPrettier is true", () => {
+    const config = getLintStagedConfig(false, true, true);
 
-    const content = readFileSync(join(TEST_DIR, ".lintstagedrc.js"), "utf-8");
-    expect(content).toContain("*.{ts,tsx}");
+    const commands = Object.values(config).flat();
+    expect(commands).toContain("prettier --write");
   });
 
-  it("should always include JavaScript patterns", async () => {
-    await generateLintStaged(TEST_DIR, "single", true, true, false);
+  it("should not include Prettier command for code files when usesPrettier is false", () => {
+    const config = getLintStagedConfig(true, false, true);
 
-    const content = readFileSync(join(TEST_DIR, ".lintstagedrc.js"), "utf-8");
-    expect(content).toContain("*.{js,jsx,mjs,cjs}");
+    // Get commands for TypeScript files
+    const tsPattern = Object.keys(config).find((p) => p.includes("ts"));
+    if (tsPattern) {
+      const commands = config[tsPattern];
+      const commandArray = Array.isArray(commands) ? commands : [commands];
+      expect(commandArray).not.toContain("prettier --write");
+    }
   });
 
-  it("should include JSON/MD/YAML patterns with Prettier", async () => {
-    await generateLintStaged(TEST_DIR, "single", false, true, false);
+  it("should include JSON/CSS/MD pattern when usesPrettier is true", () => {
+    const config = getLintStagedConfig(false, true, false);
 
-    const content = readFileSync(join(TEST_DIR, ".lintstagedrc.js"), "utf-8");
-    expect(content).toContain("*.{json,md,yaml,yml}");
+    const patterns = Object.keys(config);
+    const hasNonCodePattern = patterns.some(
+      (p) => p.includes("json") && p.includes("css") && p.includes("md")
+    );
+    expect(hasNonCodePattern).toBe(true);
   });
 
-  it("should include CSS patterns with Prettier", async () => {
-    await generateLintStaged(TEST_DIR, "single", false, true, false);
+  it("should not include JSON/CSS/MD pattern when usesPrettier is false", () => {
+    const config = getLintStagedConfig(true, false, true);
 
-    const content = readFileSync(join(TEST_DIR, ".lintstagedrc.js"), "utf-8");
-    expect(content).toContain("*.{css,scss,less}");
+    const patterns = Object.keys(config);
+    const hasNonCodePattern = patterns.some(
+      (p) => p.includes("json") && p.includes("css") && p.includes("md")
+    );
+    expect(hasNonCodePattern).toBe(false);
   });
 
-  it("should work with NX project type", async () => {
-    const result = await generateLintStaged(TEST_DIR, "nx", true, true, true);
+  it("should return empty object when no tools are enabled", () => {
+    const config = getLintStagedConfig(false, false, true);
 
-    expect(result.created).toContain(".lintstagedrc.js");
-    const content = readFileSync(join(TEST_DIR, ".lintstagedrc.js"), "utf-8");
-    expect(content).toContain("module.exports");
+    expect(Object.keys(config)).toHaveLength(0);
   });
 
-  it("should work with Turbo project type", async () => {
-    const result = await generateLintStaged(TEST_DIR, "turbo", true, true, true);
+  it("should match zero-to-one pattern format", () => {
+    const config = getLintStagedConfig(true, true, true);
 
-    expect(result.created).toContain(".lintstagedrc.js");
+    // Expected pattern: "*.{ts,mts,cts,tsx,js,mjs,cjs,jsx}": ["eslint --fix", "prettier --write"]
+    const codePattern = Object.keys(config).find((p) =>
+      p.includes("ts") && p.includes("js")
+    );
+    expect(codePattern).toBeDefined();
+
+    if (codePattern) {
+      const commands = config[codePattern];
+      expect(Array.isArray(commands)).toBe(true);
+      expect(commands).toContain("eslint --fix");
+      expect(commands).toContain("prettier --write");
+    }
+  });
+});
+
+describe("generateLintStaged (deprecated)", () => {
+  it("should return config object in result", async () => {
+    const result = await generateLintStaged(
+      "/tmp",
+      "single",
+      true,
+      true,
+      true
+    );
+
+    expect(result).toHaveProperty("config");
+    expect(typeof result.config).toBe("object");
   });
 
-  it("should work with pnpm-workspace project type", async () => {
-    const result = await generateLintStaged(TEST_DIR, "pnpm-workspace", true, true, true);
+  it("should return empty created/modified arrays (no file creation)", async () => {
+    const result = await generateLintStaged(
+      "/tmp",
+      "single",
+      true,
+      true,
+      true
+    );
 
-    expect(result.created).toContain(".lintstagedrc.js");
-  });
-
-  it("should backup existing config", async () => {
-    writeFileSync(join(TEST_DIR, ".lintstagedrc.js"), "// old config");
-
-    const result = await generateLintStaged(TEST_DIR, "single", true, true, true);
-
-    expect(result.backedUp.length).toBeGreaterThan(0);
-    expect(result.backedUp[0]).toContain(".backup");
+    expect(result.created).toHaveLength(0);
+    expect(result.modified).toHaveLength(0);
   });
 
   it("should return correct GeneratorResult shape", async () => {
-    const result = await generateLintStaged(TEST_DIR, "single", true, true, true);
+    const result = await generateLintStaged(
+      "/tmp",
+      "single",
+      true,
+      true,
+      true
+    );
 
     expect(result).toHaveProperty("created");
     expect(result).toHaveProperty("modified");
     expect(result).toHaveProperty("skipped");
     expect(result).toHaveProperty("backedUp");
-  });
-
-  it("should handle no eslint or prettier", async () => {
-    await generateLintStaged(TEST_DIR, "single", false, false, true);
-
-    const content = readFileSync(join(TEST_DIR, ".lintstagedrc.js"), "utf-8");
-    expect(content).toContain("module.exports");
-    // Should not have any file patterns since no tools are enabled
-    expect(content).not.toContain("eslint");
-    expect(content).not.toContain("prettier");
   });
 });

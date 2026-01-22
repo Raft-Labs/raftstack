@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { readFileSync, writeFileSync, mkdtempSync, rmSync, existsSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  mkdtempSync,
+  rmSync,
+  existsSync,
+} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { generatePrettier } from "../prettier.js";
@@ -14,7 +20,9 @@ describe("generatePrettier", () => {
   afterEach(() => {
     try {
       rmSync(TEST_DIR, { recursive: true, force: true });
-    } catch {}
+    } catch {
+      // Ignore cleanup errors
+    }
   });
 
   it("should create .prettierrc", async () => {
@@ -31,17 +39,20 @@ describe("generatePrettier", () => {
     expect(existsSync(join(TEST_DIR, ".prettierignore"))).toBe(true);
   });
 
-  it("should have correct Prettier config options", async () => {
+  it("should have correct Prettier config options (zero-to-one pattern)", async () => {
     await generatePrettier(TEST_DIR);
 
     const content = readFileSync(join(TEST_DIR, ".prettierrc"), "utf-8");
     const config = JSON.parse(content);
 
     expect(config.semi).toBe(true);
-    expect(config.singleQuote).toBe(true);
+    expect(config.singleQuote).toBe(false); // Changed to false for zero-to-one pattern
     expect(config.tabWidth).toBe(2);
     expect(config.trailingComma).toBe("es5");
-    expect(config.printWidth).toBe(100);
+    expect(config.printWidth).toBe(80); // Changed to 80 for zero-to-one pattern
+    expect(config.useTabs).toBe(false);
+    expect(config.arrowParens).toBe("always");
+    expect(config.endOfLine).toBe("lf");
   });
 
   it("should skip if .prettierrc already exists", async () => {
@@ -69,13 +80,17 @@ describe("generatePrettier", () => {
     expect(result.skipped).toContain(".prettierrc (already exists)");
   });
 
-  it("should include common ignore patterns", async () => {
+  it("should include common ignore patterns (zero-to-one pattern)", async () => {
     await generatePrettier(TEST_DIR);
 
     const content = readFileSync(join(TEST_DIR, ".prettierignore"), "utf-8");
-    expect(content).toContain("node_modules/");
-    expect(content).toContain("dist/");
-    expect(content).toContain("coverage/");
+    // Zero-to-one pattern uses patterns without trailing slashes
+    expect(content).toContain("node_modules");
+    expect(content).toContain("dist");
+    expect(content).toContain("build");
+    expect(content).toContain(".turbo");
+    expect(content).toContain(".next");
+    expect(content).toContain("coverage");
     expect(content).toContain("pnpm-lock.yaml");
   });
 

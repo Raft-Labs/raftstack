@@ -1,9 +1,15 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { readFileSync, writeFileSync, mkdtempSync, rmSync, statSync, mkdirSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  mkdtempSync,
+  rmSync,
+  statSync,
+  mkdirSync,
+} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { generateHuskyHooks } from "../husky.js";
-import { getPackageManagerInfo } from "../../utils/detect-package-manager.js";
 
 let TEST_DIR: string;
 
@@ -15,72 +21,64 @@ describe("generateHuskyHooks", () => {
   afterEach(() => {
     try {
       rmSync(TEST_DIR, { recursive: true, force: true });
-    } catch {}
+    } catch {
+      // Ignore cleanup errors
+    }
   });
 
   it("should create .husky directory", async () => {
-    const pm = getPackageManagerInfo("npm");
-    const result = await generateHuskyHooks(TEST_DIR, "single", pm);
+    const result = await generateHuskyHooks(TEST_DIR, "single");
 
     expect(result.created).toContain(".husky/pre-commit");
     expect(result.created).toContain(".husky/commit-msg");
     expect(result.created).toContain(".husky/pre-push");
   });
 
-  it("should create pre-commit hook with npm", async () => {
-    const pm = getPackageManagerInfo("npm");
-    await generateHuskyHooks(TEST_DIR, "single", pm);
+  it("should create pre-commit hook with direct lint-staged command", async () => {
+    await generateHuskyHooks(TEST_DIR, "single");
 
-    const content = readFileSync(join(TEST_DIR, ".husky", "pre-commit"), "utf-8");
-    expect(content).toContain("#!/usr/bin/env sh");
-    expect(content).toContain("husky.sh");
-    expect(content).toContain("npx lint-staged");
+    const content = readFileSync(
+      join(TEST_DIR, ".husky", "pre-commit"),
+      "utf-8"
+    );
+    // Husky v9+ format: just the command, no shebang or shim needed
+    expect(content).toContain("lint-staged");
+    expect(content).not.toContain("npx");
+    expect(content).not.toContain("pnpm dlx");
+    expect(content).not.toContain("yarn dlx");
+    // New format doesn't use shell wrapper
+    expect(content).not.toContain("#!/usr/bin/env sh");
+    expect(content).not.toContain("husky.sh");
   });
 
-  it("should create pre-commit hook with pnpm", async () => {
-    const pm = getPackageManagerInfo("pnpm");
-    await generateHuskyHooks(TEST_DIR, "single", pm);
+  it("should create commit-msg hook with direct commitlint command", async () => {
+    await generateHuskyHooks(TEST_DIR, "single");
 
-    const content = readFileSync(join(TEST_DIR, ".husky", "pre-commit"), "utf-8");
-    expect(content).toContain("pnpm dlx lint-staged");
+    const content = readFileSync(
+      join(TEST_DIR, ".husky", "commit-msg"),
+      "utf-8"
+    );
+    expect(content).toContain("commitlint --edit");
+    expect(content).toContain('"$1"');
+    // Should use direct command, not npx
+    expect(content).not.toContain("npx");
+    expect(content).not.toContain("--no --");
   });
 
-  it("should create pre-commit hook with yarn", async () => {
-    const pm = getPackageManagerInfo("yarn");
-    await generateHuskyHooks(TEST_DIR, "single", pm);
+  it("should create pre-push hook with direct validate-branch-name command", async () => {
+    await generateHuskyHooks(TEST_DIR, "single");
 
-    const content = readFileSync(join(TEST_DIR, ".husky", "pre-commit"), "utf-8");
-    expect(content).toContain("yarn lint-staged");
-  });
-
-  it("should create pre-commit hook with yarn-berry", async () => {
-    const pm = getPackageManagerInfo("yarn-berry");
-    await generateHuskyHooks(TEST_DIR, "single", pm);
-
-    const content = readFileSync(join(TEST_DIR, ".husky", "pre-commit"), "utf-8");
-    expect(content).toContain("yarn dlx lint-staged");
-  });
-
-  it("should create commit-msg hook with commitlint", async () => {
-    const pm = getPackageManagerInfo("npm");
-    await generateHuskyHooks(TEST_DIR, "single", pm);
-
-    const content = readFileSync(join(TEST_DIR, ".husky", "commit-msg"), "utf-8");
-    expect(content).toContain("commitlint");
-    expect(content).toContain('--edit "$1"');
-  });
-
-  it("should create pre-push hook with branch validation", async () => {
-    const pm = getPackageManagerInfo("npm");
-    await generateHuskyHooks(TEST_DIR, "single", pm);
-
-    const content = readFileSync(join(TEST_DIR, ".husky", "pre-push"), "utf-8");
+    const content = readFileSync(
+      join(TEST_DIR, ".husky", "pre-push"),
+      "utf-8"
+    );
     expect(content).toContain("validate-branch-name");
+    // Should use direct command, not npx
+    expect(content).not.toContain("npx");
   });
 
   it("should make hooks executable", async () => {
-    const pm = getPackageManagerInfo("npm");
-    await generateHuskyHooks(TEST_DIR, "single", pm);
+    await generateHuskyHooks(TEST_DIR, "single");
 
     const preCommitStats = statSync(join(TEST_DIR, ".husky", "pre-commit"));
     // Check if executable (mode & 0o111 should be non-zero)
@@ -88,12 +86,11 @@ describe("generateHuskyHooks", () => {
   });
 
   it("should backup existing hooks", async () => {
-    const pm = getPackageManagerInfo("npm");
     // Create existing hook
     mkdirSync(join(TEST_DIR, ".husky"), { recursive: true });
     writeFileSync(join(TEST_DIR, ".husky", "pre-commit"), "# old hook");
 
-    const result = await generateHuskyHooks(TEST_DIR, "single", pm);
+    const result = await generateHuskyHooks(TEST_DIR, "single");
 
     // backedUp contains full backup paths with .backup suffix
     expect(result.backedUp.length).toBeGreaterThan(0);
@@ -101,8 +98,7 @@ describe("generateHuskyHooks", () => {
   });
 
   it("should return correct GeneratorResult shape", async () => {
-    const pm = getPackageManagerInfo("npm");
-    const result = await generateHuskyHooks(TEST_DIR, "single", pm);
+    const result = await generateHuskyHooks(TEST_DIR, "single");
 
     expect(result).toHaveProperty("created");
     expect(result).toHaveProperty("modified");
@@ -115,25 +111,50 @@ describe("generateHuskyHooks", () => {
   });
 
   it("should work with NX project type", async () => {
-    const pm = getPackageManagerInfo("npm");
-    const result = await generateHuskyHooks(TEST_DIR, "nx", pm);
+    const result = await generateHuskyHooks(TEST_DIR, "nx");
 
     expect(result.created).toHaveLength(3);
-    const content = readFileSync(join(TEST_DIR, ".husky", "pre-commit"), "utf-8");
+    const content = readFileSync(
+      join(TEST_DIR, ".husky", "pre-commit"),
+      "utf-8"
+    );
     expect(content).toContain("lint-staged");
   });
 
   it("should work with Turbo project type", async () => {
-    const pm = getPackageManagerInfo("npm");
-    const result = await generateHuskyHooks(TEST_DIR, "turbo", pm);
+    const result = await generateHuskyHooks(TEST_DIR, "turbo");
 
     expect(result.created).toHaveLength(3);
   });
 
   it("should work with pnpm-workspace project type", async () => {
-    const pm = getPackageManagerInfo("npm");
-    const result = await generateHuskyHooks(TEST_DIR, "pnpm-workspace", pm);
+    const result = await generateHuskyHooks(TEST_DIR, "pnpm-workspace");
 
     expect(result.created).toHaveLength(3);
+  });
+
+  it("should ignore pm parameter (backward compatibility)", async () => {
+    // The pm parameter is now ignored, but should not cause errors
+    const mockPm = {
+      name: "npm" as const,
+      install: "npm install",
+      run: "npm run",
+      exec: "npx",
+      lockfile: "package-lock.json",
+      installFrozen: "npm ci",
+      needsSetupAction: false,
+      cacheKey: "npm",
+    };
+
+    const result = await generateHuskyHooks(TEST_DIR, "single", mockPm);
+
+    expect(result.created).toHaveLength(3);
+    // Should still use direct commands regardless of pm
+    const content = readFileSync(
+      join(TEST_DIR, ".husky", "pre-commit"),
+      "utf-8"
+    );
+    expect(content).not.toContain("npx");
+    expect(content).toContain("lint-staged");
   });
 });

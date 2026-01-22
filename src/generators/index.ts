@@ -2,7 +2,7 @@
 export { generateHuskyHooks } from "./husky.js";
 export { generateCommitlint } from "./commitlint.js";
 export { generateCzGit } from "./cz-git.js";
-export { generateLintStaged } from "./lint-staged.js";
+export { generateLintStaged, getLintStagedConfig } from "./lint-staged.js";
 export { generateBranchValidation } from "./branch-validation.js";
 export { generatePRTemplate } from "./pr-template.js";
 export { generateGitHubWorkflows } from "./github-workflows.js";
@@ -12,5 +12,5 @@ export { generateBranchProtectionDocs } from "./branch-protection.js";
 export { generateContributing } from "./contributing.js";
 export { generatePrettier } from "./prettier.js";
 export { generateClaudeSkills } from "./claude-skills.js";
-export { generateEslint, getEslintDependencies } from "./eslint.js";
+export { generateEslint, detectReact } from "./eslint.js";
 export { generateQuickReference } from "./quick-reference.js";

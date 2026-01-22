@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { readFileSync, writeFileSync, mkdtempSync, rmSync, existsSync, mkdirSync } from "node:fs";
+import {
+  readFileSync,
+  writeFileSync,
+  mkdtempSync,
+  rmSync,
+  existsSync,
+  mkdirSync,
+} from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -8,7 +15,7 @@ import {
   generateHuskyHooks,
   generateCommitlint,
   generateCzGit,
-  generateLintStaged,
+  getLintStagedConfig,
   generateBranchValidation,
   generatePRTemplate,
   generateGitHubWorkflows,
@@ -22,6 +29,7 @@ import {
 
 // Import utils
 import {
+  addPackageJsonConfig,
   mergeDevDependencies,
   mergeScripts,
   readPackageJson,
@@ -45,7 +53,9 @@ describe("Generators Integration", () => {
   afterEach(() => {
     try {
       rmSync(TEST_DIR, { recursive: true, force: true });
-    } catch {}
+    } catch {
+      // Ignore cleanup errors
+    }
   });
 
   describe("Full init simulation for single project", () => {
@@ -60,7 +70,6 @@ describe("Generators Integration", () => {
       results.push(await generateHuskyHooks(TEST_DIR, "single", pm));
       results.push(await generateCommitlint(TEST_DIR, undefined));
       results.push(await generateCzGit(TEST_DIR, undefined));
-      results.push(await generateLintStaged(TEST_DIR, "single", true, true, true));
       results.push(await generateBranchValidation(TEST_DIR));
       results.push(await generatePrettier(TEST_DIR));
       results.push(await generatePRTemplate(TEST_DIR, false));
@@ -71,6 +80,12 @@ describe("Generators Integration", () => {
       results.push(await generateContributing(TEST_DIR, false, pm));
       results.push(await generateClaudeSkills(TEST_DIR));
 
+      // Add lint-staged config to package.json (new approach)
+      const lintStagedConfig = getLintStagedConfig(true, true, true);
+      let pkg = await readPackageJson(TEST_DIR);
+      pkg = addPackageJsonConfig(pkg, "lint-staged", lintStagedConfig, true);
+      await writePackageJson(pkg, TEST_DIR);
+
       // Verify generator results are collected
       expect(results.length).toBeGreaterThan(0);
 
@@ -79,12 +94,15 @@ describe("Generators Integration", () => {
       expect(existsSync(join(TEST_DIR, ".husky", "commit-msg"))).toBe(true);
       expect(existsSync(join(TEST_DIR, "commitlint.config.js"))).toBe(true);
       expect(existsSync(join(TEST_DIR, ".czrc"))).toBe(true);
-      expect(existsSync(join(TEST_DIR, ".lintstagedrc.js"))).toBe(true);
       expect(existsSync(join(TEST_DIR, ".prettierrc"))).toBe(true);
       expect(existsSync(join(TEST_DIR, ".github", "PULL_REQUEST_TEMPLATE.md"))).toBe(true);
       expect(existsSync(join(TEST_DIR, ".github", "workflows", "pr-checks.yml"))).toBe(true);
       expect(existsSync(join(TEST_DIR, ".github", "CODEOWNERS"))).toBe(true);
       expect(existsSync(join(TEST_DIR, "CONTRIBUTING.md"))).toBe(true);
+
+      // Verify lint-staged config is in package.json
+      const updatedPkg = JSON.parse(readFileSync(join(TEST_DIR, "package.json"), "utf-8"));
+      expect(updatedPkg).toHaveProperty("lint-staged");
     });
 
     it("should update package.json with scripts and devDependencies", async () => {
@@ -108,6 +126,9 @@ describe("Generators Integration", () => {
       expect(updated.devDependencies).toHaveProperty("cz-git");
       expect(updated.devDependencies).toHaveProperty("lint-staged");
       expect(updated.devDependencies).toHaveProperty("validate-branch-name");
+      // New dependencies
+      expect(updated.devDependencies).toHaveProperty("eslint");
+      expect(updated.devDependencies).toHaveProperty("prettier");
     });
   });
 
@@ -128,14 +149,14 @@ describe("Generators Integration", () => {
       expect(workflow).toContain("--target=test");
     });
 
-    it("should create NX-specific lint-staged config", async () => {
-      writeFileSync(join(TEST_DIR, "nx.json"), "{}");
+    it("should create lint-staged config for NX projects", () => {
+      // getLintStagedConfig returns an object (not a file anymore)
+      const config = getLintStagedConfig(true, true, true);
 
-      await generateLintStaged(TEST_DIR, "nx", true, true, true);
-
-      const config = readFileSync(join(TEST_DIR, ".lintstagedrc.js"), "utf-8");
-      expect(config).toContain("module.exports");
-      expect(config).toContain("eslint --fix");
+      expect(config).toHaveProperty("*.{ts,mts,cts,tsx,js,mjs,cjs,jsx}");
+      const commands = config["*.{ts,mts,cts,tsx,js,mjs,cjs,jsx}"];
+      expect(commands).toContain("eslint --fix");
+      expect(commands).toContain("prettier --write");
     });
   });
 
@@ -195,9 +216,9 @@ describe("Generators Integration", () => {
     it("should create Copilot workflow", async () => {
       await generateAIReview(TEST_DIR, "copilot");
 
-      expect(existsSync(join(TEST_DIR, ".github", "workflows", "copilot-review.yml"))).toBe(
-        true
-      );
+      expect(
+        existsSync(join(TEST_DIR, ".github", "workflows", "copilot-review.yml"))
+      ).toBe(true);
     });
   });
 

@@ -105,16 +105,33 @@ export async function updatePackageJson(
 }
 
 /**
- * Dependencies that RaftStack will install in the target project
+ * Core dependencies that RaftStack will always install in the target project
  */
 export const RAFTSTACK_DEV_DEPENDENCIES: Record<string, string> = {
-  "@commitlint/cli": "^18.0.0",
-  "@commitlint/config-conventional": "^18.0.0",
-  "cz-git": "^1.8.0",
-  czg: "^1.8.0",
+  // Commit tooling
+  "@commitlint/cli": "^19.0.0",
+  "@commitlint/config-conventional": "^19.0.0",
+  "cz-git": "^1.11.0",
+  czg: "^1.11.0",
   husky: "^9.0.0",
-  "lint-staged": "^15.0.0",
+  "lint-staged": "^16.0.0",
   "validate-branch-name": "^1.3.0",
+
+  // Linting & formatting
+  eslint: "^9.0.0",
+  "@eslint/js": "^9.0.0",
+  "typescript-eslint": "^8.0.0",
+  "eslint-config-prettier": "^10.0.0",
+  prettier: "^3.0.0",
+  globals: "^15.0.0",
+};
+
+/**
+ * Additional ESLint dependencies for React projects
+ */
+export const REACT_ESLINT_DEPS: Record<string, string> = {
+  "eslint-plugin-react": "^7.35.0",
+  "eslint-plugin-react-hooks": "^5.0.0",
 };
 
 /**
