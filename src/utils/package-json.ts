@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { spawn } from "node:child_process";
+import { execa } from "execa";
 import type { PackageJson, PackageManagerInfo } from "../types/config.js";
 
 /**
@@ -128,6 +128,9 @@ export interface InstallResult {
 
 /**
  * Install packages using the package manager CLI
+ *
+ * Uses execa instead of spawn for better PATH resolution,
+ * especially when running via `pnpm dlx` or `npx`.
  */
 export async function installPackages(
   pm: PackageManagerInfo,
@@ -138,43 +141,25 @@ export async function installPackages(
     return { success: true };
   }
 
-  return new Promise((resolve) => {
+  try {
     // Build the command: e.g., "pnpm add -D pkg1 pkg2 ..."
     // addDev is like "install -D" or "add -D"
     const addDevArgs = pm.addDev.split(" ");
     const pmCommand = pm.name === "npm" ? "npm" : pm.name.replace("-berry", "");
     const args = [...addDevArgs, ...packages];
 
-    const child = spawn(pmCommand, args, {
+    await execa(pmCommand, args, {
       cwd: targetDir,
-      stdio: ["ignore", "pipe", "pipe"],
-      shell: process.platform === "win32",
+      stdio: "inherit", // Show install progress to user
     });
 
-    let stderr = "";
-
-    child.stderr?.on("data", (data: Buffer) => {
-      stderr += data.toString();
-    });
-
-    child.on("close", (code) => {
-      if (code === 0) {
-        resolve({ success: true });
-      } else {
-        resolve({
-          success: false,
-          error: stderr || `Installation failed with exit code ${code}`,
-        });
-      }
-    });
-
-    child.on("error", (err) => {
-      resolve({
-        success: false,
-        error: err.message,
-      });
-    });
-  });
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
 }
 
 /**
