@@ -68,7 +68,19 @@ async function updateProjectPackageJson(
     const scripts: Record<string, string> = {
       prepare: "husky",
       commit: "czg",
+      // ESLint scripts (always added since we install ESLint)
+      lint: "eslint .",
+      "lint:fix": "eslint . --fix",
+      // Prettier scripts (always added since we install Prettier)
+      format: "prettier --write .",
+      "format:check": "prettier --check .",
     };
+
+    // Add typecheck script if TypeScript is detected
+    if (config.usesTypeScript) {
+      scripts.typecheck = "tsc --noEmit";
+    }
+
     pkg = mergeScripts(pkg, scripts, false);
 
     // Add lint-staged config to package.json (instead of separate file)
