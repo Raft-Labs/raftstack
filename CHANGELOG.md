@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.1](https://github.com/Raft-Labs/raftstack/compare/v1.7.0...v1.7.1) (2026-01-23)
+
+
+### Bug Fixes
+
+* improve skill descriptions for better auto-apply triggering ([bfd2156](https://github.com/Raft-Labs/raftstack/commit/bfd2156ebd6e7ec6066b29f938bdcae96069b1c9))
+
 ### [1.6.3](https://github.com/Raft-Labs/raftstack/compare/v1.6.1...v1.6.3) (2026-01-22)
 
 
