@@ -1,6 +1,6 @@
 ---
 name: seo
-description: Use when creating web pages, adding metadata, optimizing Core Web Vitals, implementing structured data, or when pages aren't ranking or showing rich snippets in Google
+description: Use when adding page metadata, implementing OpenGraph tags, creating JSON-LD structured data, generating sitemaps, optimizing LCP/INP/CLS, or configuring robots.txt. Use for Next.js Metadata API, Article/Product/FAQ schemas, or image optimization with next/image.
 ---
 
 # SEO Optimization
@@ -128,6 +128,35 @@ input.addEventListener('input', (e) => {
 
 ### 2. Use Next.js Metadata API Correctly
 
+#### Root Layout: metadataBase + title.template
+
+**Critical:** Set `metadataBase` in your root layout. Without it, relative OG image URLs break.
+
+```typescript
+// app/layout.tsx
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  metadataBase: new URL('https://site.com'), // REQUIRED for OG images
+  title: {
+    default: 'Brand Name',
+    template: '%s | Brand Name', // Auto-appends to all pages
+  },
+  description: 'Default site description',
+  openGraph: {
+    siteName: 'Brand Name',
+    locale: 'en_US',
+    type: 'website',
+  },
+};
+```
+
+**Why metadataBase matters:**
+- Without it: `images: ['/og.png']` → broken URL
+- With it: `images: ['/og.png']` → `https://site.com/og.png`
+
+#### Page-Level Metadata
+
 ```typescript
 // app/products/[slug]/page.tsx
 import { Metadata } from 'next';
@@ -136,11 +165,11 @@ export async function generateMetadata({ params }): Promise<Metadata> {
   const product = await getProduct(params.slug);
 
   return {
-    title: `${product.name} | Brand - $${product.price}`,
+    title: product.name, // Becomes "Product Name | Brand Name" via template
     description: truncate(product.description, 155), // Max 155 chars
 
     alternates: {
-      canonical: `https://site.com/products/${product.slug}`,
+      canonical: `/products/${product.slug}`, // Relative OK with metadataBase
     },
 
     // OpenGraph - use 'product' for e-commerce
@@ -278,6 +307,87 @@ const faqJsonLd = {
 };
 ```
 
+#### BreadcrumbList Schema
+
+Shows breadcrumb trail in search results:
+
+```typescript
+const breadcrumbJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: 'https://site.com',
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Products',
+      item: 'https://site.com/products',
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: product.name,
+      item: `https://site.com/products/${product.slug}`,
+    },
+  ],
+};
+```
+
+### 6. Answer Engine Optimization (AEO)
+
+AI search engines (ChatGPT, Perplexity, Claude) are becoming traffic sources. Optimize for them:
+
+**Key AEO strategies:**
+
+| Strategy | Implementation |
+|----------|----------------|
+| **FAQ sections** | Add FAQPage schema - AI pulls from structured Q&A |
+| **Direct answers** | Start content with clear, factual statements |
+| **Structured data** | Schema.org markup helps AI understand content |
+| **Topic authority** | Comprehensive coverage on topic clusters |
+| **Citation-friendly** | Include stats, dates, sources that AI can cite |
+
+```typescript
+// ✅ GOOD: Content structure for AI search
+function ProductPage({ product }) {
+  return (
+    <>
+      {/* Direct answer for AI to extract */}
+      <p className="lead">
+        The {product.name} is a {product.category} that {product.keyBenefit}.
+        Priced at ${product.price}, it's ideal for {product.targetAudience}.
+      </p>
+
+      {/* FAQ section with schema */}
+      <section>
+        <h2>Frequently Asked Questions</h2>
+        {product.faqs.map(faq => (
+          <details key={faq.id}>
+            <summary>{faq.question}</summary>
+            <p>{faq.answer}</p>
+          </details>
+        ))}
+      </section>
+
+      {/* Structured data for both Google and AI */}
+      <JsonLd data={productJsonLd} />
+      <JsonLd data={faqJsonLd} />
+    </>
+  );
+}
+```
+
+**Why AEO matters:**
+- 40% of Gen Z uses TikTok/AI for search over Google
+- AI search engines cite well-structured content
+- FAQ sections appear in AI answers
+- Structured data = machine-readable = AI-friendly
+
 ## Sitemap & Robots
 
 ### Dynamic Sitemap Generation
@@ -408,13 +518,15 @@ new PerformanceObserver((list) => {
 - [Core Web Vitals INP Guide](https://web.dev/articles/inp) - Official INP optimization patterns
 - [Optimize INP](https://web.dev/articles/optimize-inp) - Three-phase optimization approach
 - [Next.js Image Component](https://nextjs.org/docs/app/api-reference/components/image) - priority, placeholder, sizes
-- [Next.js Metadata API](https://nextjs.org/docs/app/api-reference/functions/generate-metadata) - generateMetadata patterns
+- [Next.js Metadata API](https://nextjs.org/docs/app/api-reference/functions/generate-metadata) - generateMetadata, metadataBase
 - [Schema.org](https://schema.org/) - Structured data vocabulary
+- [Rich Results Test](https://search.google.com/test/rich-results) - Validate structured data
 
 **Version Notes:**
 - INP replaced FID as Core Web Vital (March 2024)
-- Next.js 15: Enhanced Image component with automatic blur
+- Next.js 15: Enhanced Image component, metadataBase required for OG
 - Good INP: < 200ms (improving from 500ms → 200ms = 22% engagement boost)
+- AEO emerging: AI search engines (ChatGPT, Perplexity) use structured data
 
 ## Red Flags - STOP and Fix
 

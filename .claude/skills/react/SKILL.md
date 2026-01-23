@@ -1,6 +1,6 @@
 ---
 name: react
-description: Use when writing React components, using hooks, handling state, working with Next.js/Remix/Vite/Astro, or when components feel bloated, have unnecessary re-renders, or violate single responsibility
+description: Use when writing React components, creating hooks, using useState/useEffect/useReducer, building Next.js pages, implementing Server Components or Client Components, working with Remix loaders, Astro islands, or Vite SPA. Use for React performance issues, re-render problems, or component refactoring.
 ---
 
 # React Development
@@ -229,6 +229,60 @@ export function SignupForm() {
 
 ## React 19 Features
 
+### React Compiler (Auto-Memoization)
+
+React Compiler automatically adds memoization - no more manual `useMemo`, `useCallback`, or `React.memo`.
+
+```typescript
+// ❌ OLD: Manual memoization everywhere
+const MemoizedComponent = React.memo(({ user }) => {
+  const formattedName = useMemo(() => formatName(user), [user]);
+  const handleClick = useCallback(() => saveUser(user), [user]);
+  return <button onClick={handleClick}>{formattedName}</button>;
+});
+
+// ✅ NEW: React Compiler handles it automatically
+function UserButton({ user }) {
+  const formattedName = formatName(user);
+  const handleClick = () => saveUser(user);
+  return <button onClick={handleClick}>{formattedName}</button>;
+}
+// Compiler adds memoization during build - 25-40% fewer re-renders
+```
+
+**Key benefits:**
+- No manual memoization needed
+- Reduces bundle size (no memo wrappers)
+- 25-40% fewer re-renders in typical apps
+- Works with existing React 19 codebases
+
+**Enable in Next.js 15+:**
+```javascript
+// next.config.js
+module.exports = {
+  experimental: {
+    reactCompiler: true,
+  },
+};
+```
+
+### Server/Client Component Decision Tree
+
+```
+Need this in the component?
+├── Event handlers (onClick, onChange) → 'use client'
+├── useState, useEffect, useReducer → 'use client'
+├── Browser APIs (localStorage, window) → 'use client'
+├── Third-party client libs (charts, maps) → 'use client'
+│
+├── Data fetching from DB/API → Server Component ✅
+├── Access backend resources → Server Component ✅
+├── Keep sensitive data (tokens, keys) → Server Component ✅
+└── Reduce client bundle → Server Component ✅
+```
+
+**Rule of thumb:** Start with Server Components. Only add 'use client' when you hit a boundary that requires it.
+
 ### use() Hook - Read Promises/Context
 
 ```typescript
@@ -278,6 +332,59 @@ function TodoList({ todos }: { todos: Todo[] }) {
 ```
 
 **Auto-reverts on error** - no manual rollback needed.
+
+### Partial Pre-rendering (PPR) - Next.js 15+
+
+Combine static shell with dynamic content in a single request:
+
+```typescript
+// app/products/[id]/page.tsx
+import { Suspense } from 'react';
+
+// Static shell - pre-rendered at build time
+export default async function ProductPage({ params }) {
+  const product = await getProduct(params.id); // Cached/static
+
+  return (
+    <div>
+      {/* Static content - instant load */}
+      <h1>{product.name}</h1>
+      <p>{product.description}</p>
+
+      {/* Dynamic content - streams in */}
+      <Suspense fallback={<PriceSkeleton />}>
+        <DynamicPrice productId={params.id} />
+      </Suspense>
+
+      <Suspense fallback={<InventorySkeleton />}>
+        <InventoryStatus productId={params.id} />
+      </Suspense>
+    </div>
+  );
+}
+
+// Dynamic component - fetches real-time data
+async function DynamicPrice({ productId }) {
+  const price = await getCurrentPrice(productId); // Always fresh
+  return <span className="price">${price}</span>;
+}
+```
+
+**Enable PPR:**
+```javascript
+// next.config.js
+module.exports = {
+  experimental: {
+    ppr: true,
+  },
+};
+```
+
+**Benefits:**
+- Static shell loads instantly (like SSG)
+- Dynamic parts stream in (like SSR)
+- Best of both worlds in one request
+- No full-page waterfall
 
 ## Streaming & Suspense
 
@@ -384,12 +491,15 @@ test('shows fallback then content', async () => {
 
 - [Next.js Documentation](https://nextjs.org/docs) - App Router, Server Components, Server Actions
 - [React 19 Release](https://react.dev/blog/2024/12/05/react-19) - use(), useActionState, useOptimistic
+- [React Compiler](https://react.dev/learn/react-compiler) - Auto-memoization setup and usage
 - [React Server Components](https://react.dev/reference/rsc/server-components) - Official RSC guide
 
 **Version Notes:**
 - Next.js 14+: App Router stable, Server Actions stable
-- Next.js 15: Enhanced caching, Turbopack, React 19 support
+- Next.js 15: Turbopack stable, React Compiler support, PPR experimental
 - React 19: use(), Actions, useOptimistic, useActionState
+- React 19.2+: Partial Pre-rendering (PPR), enhanced Suspense
+- React Compiler: Auto-memoization, 25-40% fewer re-renders
 
 ## Red Flags - STOP and Restructure
 

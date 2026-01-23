@@ -1,6 +1,6 @@
 ---
 name: backend
-description: Use when writing serverless functions, API handlers, backend services, or when code has tight coupling to infrastructure, no dependency injection, or mixed concerns
+description: Use when writing Lambda functions, API routes, Hono handlers, Express routes, serverless endpoints, or backend services. Use when creating API validation with Zod, implementing service layers, or structuring handler code.
 ---
 
 # Backend Development
@@ -578,6 +578,135 @@ export const handler = compose(
 )(baseHandler);
 ```
 
+## Hono.js Patterns
+
+Hono is a fast, lightweight framework for serverless and edge. Same patterns apply - layer separation, DI, Zod validation.
+
+### Basic Hono Handler with Zod
+
+```typescript
+import { Hono } from 'hono';
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
+
+const app = new Hono();
+
+const CreateUserSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(1),
+});
+
+// ✅ GOOD: Validation middleware + typed body
+app.post(
+  '/users',
+  zValidator('json', CreateUserSchema),
+  async (c) => {
+    const body = c.req.valid('json'); // Typed as { email: string; name: string }
+    const user = await userService.createUser(body);
+    return c.json(user, 201);
+  }
+);
+```
+
+### Hono with Dependency Injection
+
+```typescript
+// ✅ GOOD: Factory pattern for testable Hono apps
+import { Hono } from 'hono';
+
+export function createApp(deps: {
+  userService: UserService;
+  authService: AuthService;
+}) {
+  const app = new Hono();
+
+  app.post('/users', async (c) => {
+    const body = await c.req.json();
+    const user = await deps.userService.createUser(body);
+    return c.json(user, 201);
+  });
+
+  app.post('/login', async (c) => {
+    const { email, password } = await c.req.json();
+    const token = await deps.authService.login(email, password);
+    return c.json({ token });
+  });
+
+  return app;
+}
+
+// Production: inject real services
+const app = createApp({
+  userService: createUserService(db),
+  authService: createAuthService(db),
+});
+
+export default app;
+
+// Test: inject mocks
+const testApp = createApp({
+  userService: { createUser: vi.fn() },
+  authService: { login: vi.fn() },
+});
+```
+
+### Hono Error Handling Middleware
+
+```typescript
+import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
+
+const app = new Hono();
+
+// Global error handler
+app.onError((err, c) => {
+  if (err instanceof AppError) {
+    return c.json(
+      { error: err.message, code: err.code },
+      err.statusCode
+    );
+  }
+
+  if (err instanceof HTTPException) {
+    return c.json({ error: err.message }, err.status);
+  }
+
+  console.error('Unexpected error:', err);
+  return c.json({ error: 'Internal server error' }, 500);
+});
+
+// Route handlers throw AppError
+app.get('/users/:id', async (c) => {
+  const user = await userService.getUser(c.req.param('id'));
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+  return c.json(user);
+});
+```
+
+### Hono Middleware Composition
+
+```typescript
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { logger } from 'hono/logger';
+import { jwt } from 'hono/jwt';
+
+const app = new Hono();
+
+// Apply middleware in order
+app.use('*', logger());
+app.use('*', cors());
+app.use('/api/*', jwt({ secret: process.env.JWT_SECRET }));
+
+// Protected routes
+app.get('/api/me', (c) => {
+  const payload = c.get('jwtPayload');
+  return c.json({ userId: payload.sub });
+});
+```
+
 ## Testing Strategy
 
 | What to Test | How |
@@ -735,6 +864,7 @@ describe('Handler', () => {
 ## References
 
 - [Zod Documentation](https://zod.dev) - Validation, transforms, error formatting, branded types
+- [Hono Documentation](https://hono.dev) - Lightweight framework for serverless and edge
 - [Vitest Documentation](https://vitest.dev) - Testing, mocking, vi.fn(), vi.spyOn()
 - [AWS Lambda Cold Starts](https://aws.amazon.com/blogs/compute/understanding-and-remediating-cold-starts-an-aws-lambda-perspective/) - Official optimization guide
 - [AWS Lambda Performance](https://aws.amazon.com/blogs/compute/operating-lambda-performance-optimization-part-1/) - Best practices
@@ -742,6 +872,7 @@ describe('Handler', () => {
 **Version Notes:**
 - Zod v3.24+: Improved error formatting, discriminated unions, branded types
 - Zod v4.0+: prefault(), enhanced pipe(), performance improvements
+- Hono v4+: Stable, edge-ready, built-in middleware
 - Vitest v3+: mockResolvedValue, mockRejectedValue patterns
 - AWS Lambda: Node.js 20.x has faster cold starts than 18.x
 

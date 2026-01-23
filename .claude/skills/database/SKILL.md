@@ -1,6 +1,6 @@
 ---
 name: database
-description: Use when designing database schemas, writing Drizzle ORM code, creating tables, choosing indexes, or when queries are slow and indexes might be missing
+description: Use when writing Drizzle ORM schemas, creating database tables, adding indexes, writing SQL migrations, defining relations, or optimizing PostgreSQL queries. Use for foreign key indexes, JSONB columns, composite indexes, or prepared statements.
 ---
 
 # Database Development
@@ -125,19 +125,65 @@ export const users = pgTable("users", {
 | Strategy | Use When | Pros | Cons |
 |----------|----------|------|------|
 | **UUID** | Distributed systems, public IDs | No collisions, hide growth | Larger, slower indexes |
-| **Serial/bigserial** | Single DB, internal IDs | Compact, fast | Exposes growth, sequence issues |
+| **Identity** | Single DB, internal IDs (2025+) | Compact, fast, SQL standard | Exposes growth |
 | **ULID/NanoID** | Need sortability + randomness | Sortable, compact | Custom generation |
 
 ```typescript
-// UUID (default recommendation)
+// UUID (default for distributed/public IDs)
 id: uuid("id").defaultRandom().primaryKey(),
 
-// Serial for internal/analytics tables
-id: serial("id").primaryKey(),
+// ✅ GOOD: Identity columns (PostgreSQL 10+, preferred over serial)
+id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+
+// For bigint IDs
+id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+
+// ❌ AVOID: Serial (legacy, has sequence ownership issues)
+id: serial("id").primaryKey(), // Use identity instead
 
 // ULID for sortable + random
 id: varchar("id", { length: 26 }).primaryKey().$default(() => ulid()),
 ```
+
+**Why Identity over Serial:**
+- SQL standard (serial is PostgreSQL-specific)
+- No sequence ownership issues during migrations
+- Better `COPY` and `pg_dump` behavior
+- Cannot be overwritten accidentally (`GENERATED ALWAYS`)
+
+### 7. Full-Text Search with GIN
+
+For searchable text columns, use PostgreSQL's built-in full-text search:
+
+```typescript
+import { sql } from "drizzle-orm";
+import { index, pgTable, text, tsvector } from "drizzle-orm/pg-core";
+
+export const products = pgTable("products", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  // Generated tsvector column for search
+  searchVector: tsvector("search_vector").generatedAlwaysAs(
+    sql`to_tsvector('english', coalesce(${products.name}, '') || ' ' || coalesce(${products.description}, ''))`
+  ),
+}, (table) => ({
+  // GIN index for fast full-text search
+  searchIdx: index("products_search_idx").using("gin", table.searchVector),
+}));
+
+// Query with full-text search
+const results = await db
+  .select()
+  .from(products)
+  .where(sql`${products.searchVector} @@ plainto_tsquery('english', ${query})`);
+```
+
+**Key patterns:**
+- Use `tsvector` for searchable content
+- `generatedAlwaysAs` auto-updates on row changes
+- GIN index makes searches fast (vs sequential scan)
+- `plainto_tsquery` for simple user queries
 
 ## Migration Strategy
 
@@ -429,11 +475,14 @@ if (duration > 100) {
 
 - [Drizzle ORM Documentation](https://orm.drizzle.team/docs/overview) - Relations, prepared statements, migrations
 - [PostgreSQL Indexes](https://www.postgresql.org/docs/current/indexes.html) - Index types and usage
+- [PostgreSQL Full-Text Search](https://www.postgresql.org/docs/current/textsearch.html) - tsvector, GIN indexes
 - [Drizzle Kit](https://orm.drizzle.team/docs/kit-overview) - Migration management
 
 **Version Notes:**
-- Drizzle ORM 0.30+: Improved relations API
+- Drizzle ORM 0.30+: Improved relations API, identity column support
 - Drizzle Kit 0.20+: Enhanced migration generation
+- PostgreSQL 10+: Identity columns (prefer over serial)
+- PostgreSQL 15+: Improved JSON and full-text performance
 
 ## Red Flags - STOP and Add Indexes
 

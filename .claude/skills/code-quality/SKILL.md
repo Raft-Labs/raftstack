@@ -1,6 +1,6 @@
 ---
 name: code-quality
-description: Use when writing or reviewing code, creating functions, naming variables, structuring files, or when code feels messy, hard to read, or overly complex
+description: Use when refactoring functions, extracting helpers, splitting large files, improving naming conventions, or reducing complexity. Use when functions exceed 30 lines, have too many parameters, or contain magic numbers. NOT for React/backend/database-specific patterns.
 ---
 
 # Code Quality
@@ -141,45 +141,58 @@ if (user.role === 'admin') { }
 
 ## Automated Enforcement
 
-### ESLint Configuration
+### ESLint Configuration (Flat Config - v9+)
 
-Enforce code quality with automated tools:
+ESLint 9+ uses flat config (`eslint.config.js`). Enforce code quality automatically:
 
 ```javascript
-// .eslintrc.js
-module.exports = {
-  rules: {
-    // Max function length
-    'max-lines-per-function': ['error', {
-      max: 30,
-      skipBlankLines: true,
-      skipComments: true,
-    }],
+// eslint.config.js (ESLint v9+ flat config)
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
 
-    // Cyclomatic complexity
-    'complexity': ['error', { max: 10 }],
+export default tseslint.config(
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    rules: {
+      // Max function length
+      'max-lines-per-function': ['error', {
+        max: 30,
+        skipBlankLines: true,
+        skipComments: true,
+      }],
 
-    // Max file length
-    'max-lines': ['error', {
-      max: 300,
-      skipBlankLines: true,
-      skipComments: true,
-    }],
+      // Cyclomatic complexity
+      'complexity': ['error', { max: 10 }],
 
-    // Max function params
-    'max-params': ['error', 3],
+      // Max file length
+      'max-lines': ['error', {
+        max: 300,
+        skipBlankLines: true,
+        skipComments: true,
+      }],
 
-    // Max nested callbacks
-    'max-nested-callbacks': ['error', 2],
+      // Max function params
+      'max-params': ['error', 3],
 
-    // No magic numbers
-    'no-magic-numbers': ['error', {
-      ignore: [0, 1, -1],
-      ignoreArrayIndexes: true,
-    }],
+      // Max nested callbacks
+      'max-nested-callbacks': ['error', 2],
+
+      // No magic numbers
+      'no-magic-numbers': ['error', {
+        ignore: [0, 1, -1],
+        ignoreArrayIndexes: true,
+      }],
+    },
   },
-};
+  {
+    // Ignore patterns (replaces .eslintignore)
+    ignores: ['node_modules/', 'dist/', '*.config.js'],
+  }
+);
 ```
+
+**Legacy config?** ESLint 9+ still supports `.eslintrc.js` via `ESLINT_USE_FLAT_CONFIG=false`, but flat config is the future.
 
 ### TypeScript-Specific Patterns
 
@@ -294,14 +307,16 @@ When someone says "just make it work fast":
 
 ## References
 
+- [ESLint Flat Config](https://eslint.org/docs/latest/use/configure/configuration-files-new) - ESLint 9+ configuration
 - [ESLint Complexity Rule](https://eslint.org/docs/latest/rules/complexity) - Cyclomatic complexity enforcement
-- [ESLintCC](https://eslintcc.github.io/) - Complexity measurement tool
+- [typescript-eslint](https://typescript-eslint.io/) - TypeScript ESLint integration
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/) - Advanced type patterns
 - [Clean Code (Martin)](https://www.amazon.com/Clean-Code-Handbook-Software-Craftsmanship/dp/0132350882) - Function length rationale
 
 **Version Notes:**
-- ESLint 9+: Flat config format, enhanced rule options
-- TypeScript 5+: Improved discriminated union narrowing
+- ESLint 9+: Flat config (`eslint.config.js`), replaces `.eslintrc.*`
+- TypeScript 5+: Improved discriminated union narrowing, const type parameters
+- typescript-eslint 8+: Native flat config support
 - Cyclomatic complexity: Default threshold 20, recommended 10
 
 ## Common Mistakes
