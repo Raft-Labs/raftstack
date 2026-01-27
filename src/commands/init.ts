@@ -19,6 +19,9 @@ import {
   generateQuickReference,
   generateEslint,
   detectReact,
+  detectNextJs,
+  generateSharedConfigs,
+  isMonorepo,
 } from "../generators/index.js";
 import {
   addPackageJsonConfig,
@@ -28,6 +31,7 @@ import {
   installPackages,
   RAFTSTACK_PACKAGES,
   REACT_ESLINT_PACKAGES,
+  NEXTJS_ESLINT_PACKAGES,
 } from "../utils/package-json.js";
 import { isGitRepo } from "../utils/git.js";
 
@@ -131,14 +135,22 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
     return;
   }
 
-  // Detect React for conditional dependencies
+  // Detect frameworks for conditional dependencies
   const usesReact = await detectReact(targetDir);
+  const usesNextJs = await detectNextJs(targetDir);
 
   // Install dependencies using CLI
   const installSpinner = p.spinner();
-  const packagesToInstall = usesReact
-    ? [...RAFTSTACK_PACKAGES, ...REACT_ESLINT_PACKAGES]
-    : RAFTSTACK_PACKAGES;
+  let packagesToInstall = [...RAFTSTACK_PACKAGES];
+
+  // Add framework-specific packages
+  if (usesNextJs) {
+    // Next.js includes React, so only add Next.js ESLint packages
+    packagesToInstall = [...packagesToInstall, ...NEXTJS_ESLINT_PACKAGES];
+  } else if (usesReact) {
+    // Non-Next.js React projects need React ESLint packages
+    packagesToInstall = [...packagesToInstall, ...REACT_ESLINT_PACKAGES];
+  }
 
   installSpinner.start("Installing dependencies...");
   const installResult = await installPackages(
@@ -185,6 +197,11 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
 
     // Prettier (always generate since we install it)
     results.push(await generatePrettier(targetDir));
+
+    // Shared config packages for monorepos (ESLint + TypeScript configs)
+    if (isMonorepo(config.projectType)) {
+      results.push(await generateSharedConfigs(targetDir, config.projectType));
+    }
 
     // GitHub integration
     results.push(await generatePRTemplate(targetDir, !!config.asanaBaseUrl));

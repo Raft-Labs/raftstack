@@ -90,32 +90,41 @@ export async function updatePackageJson(
 
 /**
  * Core packages that RaftStack will install in the target project
+ * Version comments for reference - actual versions resolved by package manager
  */
 export const RAFTSTACK_PACKAGES: string[] = [
   // Commit tooling
-  "@commitlint/cli",
-  "@commitlint/config-conventional",
-  "cz-git",
-  "czg",
-  "husky",
-  "lint-staged",
-  "validate-branch-name",
+  "@commitlint/cli",           // ^20.3.0
+  "@commitlint/config-conventional", // ^20.3.0
+  "cz-git",                    // ^1.12.0
+  "czg",                       // ^1.12.0
+  "husky",                     // ^9.1.7
+  "lint-staged",               // ^16.2.0
+  "validate-branch-name",      // ^1.3.2
 
   // Linting & formatting
-  "eslint",
-  "@eslint/js",
-  "typescript-eslint",
-  "eslint-config-prettier",
-  "prettier",
-  "globals",
+  "eslint",                    // ^9.39.0
+  "@eslint/js",                // ^9.39.0
+  "typescript-eslint",         // ^8.39.0
+  "eslint-config-prettier",    // ^10.1.0
+  "prettier",                  // ^3.8.0
+  "globals",                   // ^17.0.0
 ];
 
 /**
- * Additional ESLint packages for React projects
+ * Additional ESLint packages for React projects (non-Next.js)
  */
 export const REACT_ESLINT_PACKAGES: string[] = [
-  "eslint-plugin-react",
-  "eslint-plugin-react-hooks",
+  "eslint-plugin-react",       // ^7.37.0
+  "eslint-plugin-react-hooks", // ^5.2.0
+];
+
+/**
+ * Additional ESLint packages for Next.js projects
+ * eslint-config-next includes React plugin configurations
+ */
+export const NEXTJS_ESLINT_PACKAGES: string[] = [
+  "eslint-config-next",        // ^16.1.0
 ];
 
 /**

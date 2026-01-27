@@ -387,14 +387,13 @@ describe("E2E: Init Command", () => {
         aiReviewTool: "none",
       });
 
+      // cz-git prompt config is now in commitlint.config.js
       const commitlint = readFileSync(
         join(TEST_DIR, "commitlint.config.js"),
         "utf-8"
       );
       expect(commitlint).toContain("asana-task-link");
-
-      const czConfig = readFileSync(join(TEST_DIR, "cz.config.js"), "utf-8");
-      expect(czConfig).toContain("asana:");
+      expect(commitlint).toContain("issuePrefixes"); // Asana issue prefixes in prompt
 
       const prTemplate = readFileSync(
         join(TEST_DIR, ".github", "PULL_REQUEST_TEMPLATE.md"),

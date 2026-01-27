@@ -24,11 +24,14 @@ describe("generateCzGit", () => {
     expect(existsSync(join(TEST_DIR, ".czrc"))).toBe(true);
   });
 
-  it("should create cz.config.js", async () => {
+  it("should only create .czrc (not cz.config.js)", async () => {
     const result = await generateCzGit(TEST_DIR);
 
-    expect(result.created).toContain("cz.config.js");
-    expect(existsSync(join(TEST_DIR, "cz.config.js"))).toBe(true);
+    // cz-git now reads prompt config from commitlint.config.js
+    // so we only need .czrc pointing to cz-git
+    expect(result.created).toContain(".czrc");
+    expect(result.created).not.toContain("cz.config.js");
+    expect(existsSync(join(TEST_DIR, "cz.config.js"))).toBe(false);
   });
 
   it("should reference cz-git in .czrc", async () => {
@@ -37,46 +40,6 @@ describe("generateCzGit", () => {
     const content = readFileSync(join(TEST_DIR, ".czrc"), "utf-8");
     const config = JSON.parse(content);
     expect(config.path).toContain("cz-git");
-  });
-
-  it("should include all commit types with emojis", async () => {
-    await generateCzGit(TEST_DIR);
-
-    const content = readFileSync(join(TEST_DIR, "cz.config.js"), "utf-8");
-    expect(content).toContain("feat");
-    expect(content).toContain("fix");
-    expect(content).toContain("docs");
-    expect(content).toContain("style");
-    expect(content).toContain("refactor");
-    expect(content).toContain("perf");
-    expect(content).toContain("test");
-    expect(content).toContain("build");
-    expect(content).toContain("ci");
-    expect(content).toContain("chore");
-    expect(content).toContain("revert");
-    expect(content).toContain("emoji");
-  });
-
-  it("should enable emojis", async () => {
-    await generateCzGit(TEST_DIR);
-
-    const content = readFileSync(join(TEST_DIR, "cz.config.js"), "utf-8");
-    expect(content).toContain("useEmoji: true");
-  });
-
-  it("should include Asana prefixes when baseUrl provided", async () => {
-    await generateCzGit(TEST_DIR, "https://app.asana.com/0/workspace");
-
-    const content = readFileSync(join(TEST_DIR, "cz.config.js"), "utf-8");
-    expect(content).toContain("asana:");
-    expect(content).toContain("issuePrefixes");
-  });
-
-  it("should not include Asana prefixes when no baseUrl", async () => {
-    await generateCzGit(TEST_DIR);
-
-    const content = readFileSync(join(TEST_DIR, "cz.config.js"), "utf-8");
-    expect(content).not.toContain("issuePrefixes");
   });
 
   it("should backup existing .czrc", async () => {

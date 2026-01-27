@@ -22,10 +22,33 @@ function getCommitMsgHook(): string {
 }
 
 /**
- * Generate Husky pre-push hook for branch validation
+ * Get the appropriate build command based on project type
  */
-function getPrePushHook(): string {
-  return `validate-branch-name
+function getBuildCommand(projectType: ProjectType): string {
+  switch (projectType) {
+    case "turbo":
+      return "pnpm turbo build";
+    case "nx":
+      return "pnpm nx affected --target=build --parallel=3";
+    case "pnpm-workspace":
+      // pnpm workspaces without turbo/nx - run build in all packages
+      return "pnpm -r build";
+    default:
+      return "pnpm build";
+  }
+}
+
+/**
+ * Generate Husky pre-push hook for branch validation and build
+ */
+function getPrePushHook(projectType: ProjectType): string {
+  const buildCommand = getBuildCommand(projectType);
+  return `# Validate branch naming convention
+validate-branch-name
+
+# Build all packages - push only succeeds if builds pass
+echo "🔨 Building..."
+${buildCommand}
 `;
 }
 
@@ -80,7 +103,7 @@ export async function generateHuskyHooks(
 
   // Pre-push hook
   const prePushPath = join(huskyDir, "pre-push");
-  const prePushResult = await writeFileSafe(prePushPath, getPrePushHook(), {
+  const prePushResult = await writeFileSafe(prePushPath, getPrePushHook(projectType), {
     executable: true,
     backup: true,
   });

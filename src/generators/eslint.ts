@@ -24,11 +24,49 @@ async function hasReact(targetDir: string): Promise<boolean> {
 }
 
 /**
- * Generate ESLint flat config content for TypeScript projects (matching zero-to-one pattern)
+ * Check if project uses Next.js
  */
-function generateTsConfig(hasReactDep: boolean): string {
-  if (hasReactDep) {
-    return `import eslint from "@eslint/js";
+async function hasNextJs(targetDir: string): Promise<boolean> {
+  try {
+    const pkgPath = join(targetDir, "package.json");
+    if (existsSync(pkgPath)) {
+      const content = await readFile(pkgPath, "utf-8");
+      const pkg = JSON.parse(content);
+      const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+      return "next" in deps;
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return false;
+}
+
+/**
+ * Generate ESLint flat config for Next.js projects (TypeScript)
+ * Uses eslint-config-next which provides pre-configured rules
+ */
+function generateNextJsConfig(): string {
+  return `import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
+import prettier from "eslint-config-prettier";
+
+const eslintConfig = defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  prettier,
+  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+]);
+
+export default eslintConfig;
+`;
+}
+
+/**
+ * Generate ESLint flat config for React TypeScript projects (non-Next.js)
+ */
+function generateReactTsConfig(): string {
+  return `import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import eslintConfigPrettier from "eslint-config-prettier";
 import reactPlugin from "eslint-plugin-react";
@@ -84,7 +122,7 @@ export default tseslint.config(
     },
   },
   {
-    // CommonJS config files (cz.config.js, commitlint.config.js, etc.)
+    // CommonJS config files (commitlint.config.js, etc.)
     files: ["*.config.js", "*.config.cjs"],
     languageOptions: {
       globals: {
@@ -98,8 +136,12 @@ export default tseslint.config(
   }
 );
 `;
-  }
+}
 
+/**
+ * Generate ESLint flat config for TypeScript projects (non-React)
+ */
+function generateTsConfig(): string {
   return `import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import eslintConfigPrettier from "eslint-config-prettier";
@@ -133,7 +175,7 @@ export default tseslint.config(
     },
   },
   {
-    // CommonJS config files (cz.config.js, commitlint.config.js, etc.)
+    // CommonJS config files (commitlint.config.js, etc.)
     files: ["*.config.js", "*.config.cjs"],
     languageOptions: {
       globals: {
@@ -150,11 +192,10 @@ export default tseslint.config(
 }
 
 /**
- * Generate ESLint flat config content for JavaScript projects
+ * Generate ESLint flat config for React JavaScript projects
  */
-function generateJsConfig(hasReactDep: boolean): string {
-  if (hasReactDep) {
-    return `import eslint from "@eslint/js";
+function generateReactJsConfig(): string {
+  return `import eslint from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
@@ -200,7 +241,7 @@ export default [
     },
   },
   {
-    // CommonJS config files (cz.config.js, commitlint.config.js, etc.)
+    // CommonJS config files (commitlint.config.js, etc.)
     files: ["*.config.js", "*.config.cjs"],
     languageOptions: {
       globals: {
@@ -214,8 +255,12 @@ export default [
   },
 ];
 `;
-  }
+}
 
+/**
+ * Generate ESLint flat config for JavaScript projects (non-React)
+ */
+function generateJsConfig(): string {
   return `import eslint from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier";
 import globals from "globals";
@@ -239,7 +284,7 @@ export default [
     },
   },
   {
-    // CommonJS config files (cz.config.js, commitlint.config.js, etc.)
+    // CommonJS config files (commitlint.config.js, etc.)
     files: ["*.config.js", "*.config.cjs"],
     languageOptions: {
       globals: {
@@ -263,6 +308,13 @@ export async function detectReact(targetDir: string): Promise<boolean> {
 }
 
 /**
+ * Check if project uses Next.js (exported for use by other modules)
+ */
+export async function detectNextJs(targetDir: string): Promise<boolean> {
+  return hasNextJs(targetDir);
+}
+
+/**
  * Generate ESLint configuration file
  *
  * @param targetDir - The target directory to write to
@@ -283,27 +335,43 @@ export async function generateEslint(
 
   // Check if ESLint is already configured (unless force)
   if (!force && (await hasEslint(targetDir))) {
-    result.skipped.push("eslint.config.js (ESLint already configured)");
+    result.skipped.push("eslint.config.mjs (ESLint already configured)");
     return result;
   }
 
-  // Detect React
+  // Detect project framework
+  const usesNextJs = await hasNextJs(targetDir);
   const usesReact = await hasReact(targetDir);
 
-  // Generate appropriate config
-  const config = usesTypeScript
-    ? generateTsConfig(usesReact)
-    : generateJsConfig(usesReact);
+  // Generate appropriate config based on project type
+  let config: string;
 
-  // Write config file
-  const configPath = join(targetDir, "eslint.config.js");
+  if (usesNextJs && usesTypeScript) {
+    // Next.js with TypeScript - use eslint-config-next
+    config = generateNextJsConfig();
+  } else if (usesReact && usesTypeScript) {
+    // React + TypeScript (non-Next.js)
+    config = generateReactTsConfig();
+  } else if (usesTypeScript) {
+    // TypeScript only
+    config = generateTsConfig();
+  } else if (usesReact) {
+    // React + JavaScript
+    config = generateReactJsConfig();
+  } else {
+    // Plain JavaScript
+    config = generateJsConfig();
+  }
+
+  // Write config file with .mjs extension for ESM compatibility
+  const configPath = join(targetDir, "eslint.config.mjs");
   const writeResult = await writeFileSafe(configPath, config);
 
   if (writeResult.backedUp) {
-    result.backedUp.push("eslint.config.js");
+    result.backedUp.push("eslint.config.mjs");
   }
 
-  result.created.push("eslint.config.js");
+  result.created.push("eslint.config.mjs");
 
   return result;
 }

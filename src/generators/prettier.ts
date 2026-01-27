@@ -36,6 +36,8 @@ build
 *.lock
 pnpm-lock.yaml
 coverage
+# Generated files
+**/routeTree.gen.ts
 `;
 }
 
