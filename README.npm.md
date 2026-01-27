@@ -2,6 +2,16 @@
 
 CLI tool for setting up Git hooks, commit conventions, and GitHub integration.
 
+## Features
+
+- Git hooks (pre-commit, commit-msg, pre-push) via Husky
+- Commit message validation with Commitlint
+- Interactive commit wizard with cz-git
+- Code formatting with Prettier and lint-staged
+- Branch naming validation
+- GitHub PR workflows and CODEOWNERS
+- Claude Code skills for AI-assisted development
+
 ## Installation
 
 ```bash
@@ -18,20 +28,20 @@ Run the interactive setup wizard in your project:
 raftstack init
 ```
 
-This will configure:
-- Git hooks (pre-commit, commit-msg, pre-push)
-- Commit message validation
-- Code formatting with Prettier
-- Branch naming validation
-- GitHub PR workflows and CODEOWNERS
+This configures Git hooks, commit conventions, code formatting, and GitHub integration.
 
-## Other Commands
+## Commands
 
 ```bash
+raftstack init              # Interactive setup wizard
 raftstack setup-protection  # Configure GitHub branch protection
 raftstack metrics           # Check repository compliance
 ```
 
 ## Documentation
 
-Full documentation: [github.com/Raft-Labs/raftstack](https://github.com/Raft-Labs/raftstack)
+Full documentation and user guide: [github.com/Raft-Labs/raftstack](https://github.com/Raft-Labs/raftstack)
+
+## License
+
+MIT
