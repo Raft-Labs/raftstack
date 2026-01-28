@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.9.0](https://github.com/Raft-Labs/raftstack/compare/v1.7.0...v1.9.0) (2026-01-27)
+
+
+### Features
+
+* enhance metrics command with author tracking and codebase analysis ([614ec59](https://github.com/Raft-Labs/raftstack/commit/614ec5986d151ec6fd00b3d7c947f9aaba87c780))
+* modernize generators with ESLint 9 flat config and merged cz-git ([f00ec2c](https://github.com/Raft-Labs/raftstack/commit/f00ec2c54899c866c4c779f829b8739852e21f70))
+
+
+### Bug Fixes
+
+* add lint, format, and typecheck scripts to generated package.json ([72a5e80](https://github.com/Raft-Labs/raftstack/commit/72a5e809852cbe5454fe7413a34498976d78d139))
+* improve skill descriptions for better auto-apply triggering ([bfd2156](https://github.com/Raft-Labs/raftstack/commit/bfd2156ebd6e7ec6066b29f938bdcae96069b1c9))
+
 ### [1.7.1](https://github.com/Raft-Labs/raftstack/compare/v1.7.0...v1.7.1) (2026-01-23)
 
 
