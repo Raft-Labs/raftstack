@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.9.1](https://github.com/Raft-Labs/raftstack/compare/v1.9.0...v1.9.1) (2026-01-28)
+
+
+### Features
+
+* add `install-commands` CLI and enhance Claude Code setup ([0b1946d](https://github.com/Raft-Labs/raftstack/commit/0b1946de285f9da0c2e1a781d8db71879cf7826d))
+
+
+### Documentation
+
+* add comprehensive end-user guide ([161902d](https://github.com/Raft-Labs/raftstack/commit/161902d53989f73b6eabd3484784c3f7b79de9c5))
+* streamline READMEs and link to USER_GUIDE.md ([b299c8d](https://github.com/Raft-Labs/raftstack/commit/b299c8d951cbd0cc127c6106fa3e6b955b6e2f35))
+
 ## [1.9.0](https://github.com/Raft-Labs/raftstack/compare/v1.7.0...v1.9.0) (2026-01-27)
 
 
