@@ -16,6 +16,7 @@ import {
   generateContributing,
   generatePrettier,
   generateClaudeSkills,
+  generateClaudeCommands,
   generateQuickReference,
   generateEslint,
   detectReact,
@@ -224,10 +225,11 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
     );
     results.push(await generateQuickReference(targetDir, config.packageManager));
 
-    // Claude Code skills for AI-assisted development
+    // Claude Code skills and commands for AI-assisted development
     results.push(await generateClaudeSkills(targetDir, {
       includeAsana: !!config.asanaBaseUrl
     }));
+    results.push(await generateClaudeCommands(targetDir));
 
     // Update package.json (scripts and lint-staged config)
     results.push(await updateProjectPackageJson(targetDir, config));

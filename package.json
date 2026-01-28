@@ -17,7 +17,8 @@
   "files": [
     "dist",
     "templates",
-    ".claude/skills"
+    ".claude/skills",
+    ".claude/commands"
   ],
   "scripts": {
     "build": "tsup",

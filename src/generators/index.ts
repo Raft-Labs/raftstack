@@ -12,6 +12,7 @@ export { generateBranchProtectionDocs } from "./branch-protection.js";
 export { generateContributing } from "./contributing.js";
 export { generatePrettier } from "./prettier.js";
 export { generateClaudeSkills } from "./claude-skills.js";
+export { generateClaudeCommands } from "./claude-commands.js";
 export { generateEslint, detectReact, detectNextJs } from "./eslint.js";
 export { generateQuickReference } from "./quick-reference.js";
 export { generateSharedConfigs, isMonorepo } from "./shared-configs.js";

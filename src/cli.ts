@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { runInit } from "./commands/init.js";
 import { runSetupProtection } from "./commands/setup-protection.js";
 import { runMetrics } from "./commands/metrics.js";
+import { runInstallCommands } from "./commands/install-commands.js";
 import pkg from "../package.json" assert { type: "json" };
 
 const program = new Command();
@@ -56,5 +57,12 @@ program
       });
     }
   );
+
+program
+  .command("install-commands")
+  .description("Install or update Claude Code commands and skills")
+  .action(async () => {
+    await runInstallCommands(process.cwd());
+  });
 
 program.parse();
