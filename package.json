@@ -18,7 +18,9 @@
     "dist",
     "templates",
     ".claude/skills",
-    ".claude/commands"
+    ".claude/commands",
+    ".claude/subagents",
+    ".claude/settings.json"
   ],
   "scripts": {
     "build": "tsup",

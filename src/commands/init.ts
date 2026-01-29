@@ -17,6 +17,7 @@ import {
   generatePrettier,
   generateClaudeSkills,
   generateClaudeCommands,
+  generateClaudeConfig,
   generateQuickReference,
   generateEslint,
   detectReact,
@@ -230,6 +231,7 @@ export async function runInit(targetDir: string = process.cwd()): Promise<void> 
       includeAsana: !!config.asanaBaseUrl
     }));
     results.push(await generateClaudeCommands(targetDir));
+    results.push(await generateClaudeConfig(targetDir));
 
     // Update package.json (scripts and lint-staged config)
     results.push(await updateProjectPackageJson(targetDir, config));
