@@ -2,6 +2,15 @@
 
 Analyze a specific area of the codebase and extract patterns into reusable standards.
 
+## 🔒 Planning Protocol
+
+This command follows the RaftStack Planning Protocol:
+- All changes are planned before implementation
+- User approval is required before creating standard files
+- Use `AskUserQuestion` for all approval gates
+
+**Reference:** See `_planning-protocol.md` for full protocol details.
+
 ## Arguments
 
 - `$ARGUMENTS` - (Optional) Focus area to analyze (e.g., "API", "components", "database", "error handling")
@@ -11,6 +20,7 @@ Analyze a specific area of the codebase and extract patterns into reusable stand
 **IMPORTANT:** Always use the `AskUserQuestion` tool for:
 - Focus area selection
 - Standard creation decisions
+- **Standard file creation approval** (required before writing files)
 - Location negotiation
 - Option selection
 
@@ -34,6 +44,12 @@ If no focus area provided, use `AskUserQuestion` with these options:
 - **Utilities** - Helper function patterns, shared logic
 
 ## Phase 2: Deep Pattern Analysis
+
+**IMPORTANT:** When researching patterns or understanding existing code:
+- Use `context7` plugin to get latest documentation for any libraries detected
+- Example: If analyzing React patterns, use context7 to get React 19 docs
+- Example: If analyzing Drizzle ORM, use context7 to get current Drizzle docs
+- This ensures standards are based on current best practices
 
 For the selected area, analyze:
 
@@ -89,13 +105,34 @@ After analyzing patterns, present:
 1. **[Standard Name]** - Captures: [what pattern]
 2. **[Standard Name]** - Captures: [what pattern]
 3. **[Standard Name]** - Captures: [what pattern]
-
-**Your options:** [A] Create all standards [B] Select specific standards [C] Analyze another area [D] Skip standardization
 ```
 
-Use `AskUserQuestion` for options.
+#### ⚠️ PLANNING GATE (Before Standard Creation)
+
+**DO NOT CREATE STANDARD FILES WITHOUT USER APPROVAL**
+
+Before creating any standard files:
+
+1. **Present the Pattern Analysis Above** (already done)
+
+2. **Request Approval** using `AskUserQuestion` with these options:
+   - [A] Create all standards (Recommended)
+   - [B] Select specific standards
+   - [C] Analyze another area first
+   - [D] Skip standardization
+
+3. **Implementation Rules:**
+   - ✅ Wait for explicit [A] or [B] selection before creating files
+   - ✅ If [A] selected, create all recommended standards
+   - ✅ If [B] selected, ask which standards to create, then proceed
+   - ✅ If [C] selected, return to Phase 1 for new area
+   - ✅ If [D] selected, skip standard creation
+   - ❌ Never skip approval
+   - ❌ Never create standard files without [A] or [B] selection
 
 ## Phase 4: Standard Creation
+
+**ONLY proceed to this phase after receiving approval in Phase 3 Planning Gate.**
 
 For each selected pattern, create a standard document:
 
@@ -130,13 +167,20 @@ For each selected pattern, create a standard document:
 - [Link to related skill if applicable]
 ```
 
-## Phase 5: Location Negotiation
+## Phase 5: Standard File Location
 
-Use `AskUserQuestion` with these options:
-- Option A: `.claude/standards/[area]/` - Claude-specific standards folder (Recommended)
-- Option B: `docs/standards/[area]/` - With project documentation
-- Option C: `standards/[area]/` - At project root
-- Option D: Other (let user specify)
+Standards are always saved at: `.claude/standards/[area]/[standard-name].md`
+
+**Directory Structure:**
+```
+.claude/standards/
+├── api/
+├── react/
+├── database/
+└── REGISTRY.md
+```
+
+**Note:** For business documentation (user flows, edge cases, PRDs), use `docs/` instead.
 
 ## Phase 6: Completion Summary
 

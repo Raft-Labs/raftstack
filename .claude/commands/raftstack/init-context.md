@@ -2,10 +2,20 @@
 
 Analyze this codebase and generate a constitution document that captures how this project works.
 
+## 🔒 Planning Protocol
+
+This command follows the RaftStack Planning Protocol:
+- All changes are planned before implementation
+- User approval is required before creating constitution file
+- Use `AskUserQuestion` for all approval gates
+
+**Reference:** See `_planning-protocol.md` for full protocol details.
+
 ## Tool Usage
 
 **IMPORTANT:** Always use the `AskUserQuestion` tool for:
 - Location negotiation (where to save files)
+- **Constitution file creation approval** (required before writing file)
 - Confirmation requests
 - Clarification questions
 
@@ -124,7 +134,7 @@ Use `AskUserQuestion` to present options A/B/C/D.
 
 ## Phase 3: Generate Constitution
 
-Create a constitution document with these sections:
+**IMPORTANT:** Prepare the constitution content but DO NOT write the file yet. Present it for approval first.
 
 ```markdown
 # [Project Name] Constitution
@@ -166,17 +176,52 @@ Create a constitution document with these sections:
 [User provides this - project goals, planned features]
 ```
 
-## Phase 4: Location Negotiation
+## Phase 4: Constitution Preview & Approval Gate
 
-After generating the constitution, use `AskUserQuestion` to ask where to save it:
+Present the generated constitution content to the user for review:
 
-**Use AskUserQuestion with these options:**
-- Option A: `.claude/context/constitution.md` - Claude-specific context folder (Recommended)
-- Option B: `docs/constitution.md` - With project documentation
-- Option C: `CONSTITUTION.md` - At project root
-- Option D: Other (let user specify)
+```markdown
+## 📋 Constitution Preview
 
-## Phase 5: Final Summary
+[Show first 30-40 lines of generated constitution content]
+
+...
+
+[Full constitution will be saved to `.claude/context/constitution.md`]
+```
+
+#### ⚠️ PLANNING GATE (Before Creating Constitution File)
+
+**DO NOT CREATE CONSTITUTION FILE WITHOUT USER APPROVAL**
+
+Before writing the constitution file:
+
+1. **Present the Constitution Preview Above** (already done)
+
+2. **Request Approval** using `AskUserQuestion` with these options:
+   - [A] Create constitution file (Recommended)
+   - [B] Modify the constitution content
+   - [C] Show full preview
+   - [D] Cancel
+
+3. **Implementation Rules:**
+   - ✅ Wait for explicit [A] selection before creating file
+   - ✅ If [B] selected, revise content and re-present
+   - ✅ If [C] selected, show full content and re-ask for approval
+   - ❌ Never skip approval
+   - ❌ Never create file without [A] selection
+
+## Phase 5: Constitution Location
+
+**ONLY proceed to this phase after receiving approval in Phase 4 Planning Gate.**
+
+The constitution is always saved at: `.claude/context/constitution.md`
+
+**Migration:** If a constitution exists at a legacy location (`CONSTITUTION.md` or `docs/constitution.md`), inform the user and offer to migrate it.
+
+**Note:** For business-facing documentation (PRD, stakeholder docs), use `docs/` instead.
+
+## Phase 6: Final Summary
 
 After saving the constitution, present:
 

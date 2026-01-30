@@ -15,29 +15,76 @@ Never use plain text questions - always use the structured `AskUserQuestion` too
 
 Check for existing RaftStack artifacts:
 
-### Constitution/Context
-- `.claude/context/constitution.md` → Has project context
-- `CONSTITUTION.md` → Has project context
-- `docs/constitution.md` → Has project context
+### Technical Documentation (`.claude/`)
+- `.claude/context/constitution.md` → Project constitution
+- `.claude/standards/**/*.md` → Coding standards
+- `.claude/standards/REGISTRY.md` → Standards registry
+- `.claude/specs/**/*` → Feature specifications
+- `.claude/skills/*/SKILL.md` → RaftStack skills
 
-### Standards
-- `.claude/standards/**/*.md` → Has standards
-- `docs/standards/**/*.md` → Has standards
-- `standards/**/*.md` → Has standards
-- `*.standard.md` → Has standards
+### Required Marketplaces
+Check if required Claude Code marketplaces are installed:
 
-### Specs
-- `.claude/specs/**/*` → Has feature specs
-- `docs/specs/**/*` → Has feature specs
-- `specs/**/*` → Has feature specs
+1. **Check for marketplace directories:**
+   - `~/.claude/plugins/marketplaces/claude-plugins-official/` → Official plugins
+   - `~/.claude/plugins/marketplaces/anthropic-agent-skills/` → Document skills
 
-### Skills
-- `.claude/skills/*/SKILL.md` → Has RaftStack skills installed
+2. **If missing, note in Health Assessment for installation guidance**
 
-### Registry
-- `.claude/standards/REGISTRY.md` → Has standards registry
-- `.claude/REGISTRY.md` → Has standards registry
-- `docs/REGISTRY.md` → Has standards registry
+### Business Documentation (`docs/`)
+- `docs/prd/` → Product requirements
+- `docs/user-flows/` → User journey documentation
+- `docs/edge-cases/` → Edge case documentation
+
+### Legacy Locations (suggest migration)
+- `CONSTITUTION.md`, `docs/constitution.md` → Migrate to `.claude/context/constitution.md`
+- `docs/standards/`, `standards/`, `*.standard.md` → Migrate to `.claude/standards/`
+- `docs/specs/`, `specs/` → Migrate to `.claude/specs/`
+- `.claude/REGISTRY.md`, `docs/REGISTRY.md` → Migrate to `.claude/standards/REGISTRY.md`
+
+If artifacts are found at legacy locations, include a migration recommendation in the health assessment.
+
+## Planning Protocol
+
+**All RaftStack commands follow a plan-first workflow:**
+- Commands always plan before implementing
+- User approval is required before any file modifications
+- Use `AskUserQuestion` for all approval gates
+
+For details, see `.claude/commands/raftstack/_planning-protocol.md`
+
+## RaftStack Folder Convention
+
+### `.claude/` - Technical (AI Context)
+```
+.claude/
+├── context/
+│   └── constitution.md          # Project patterns & structure
+├── standards/
+│   ├── REGISTRY.md              # Index of all standards
+│   ├── api/                     # Domain-specific standards
+│   ├── react/
+│   └── database/
+├── specs/
+│   └── {timestamp}-{slug}/      # Feature specifications
+├── skills/                      # RaftStack skills
+├── commands/
+│   └── raftstack/
+│       ├── _planning-protocol.md  # Internal: Planning enforcement protocol
+│       ├── shape.md            # /raftstack/shape command
+│       ├── discover.md         # /raftstack/discover command
+│       └── ...                 # Other commands
+└── subagents/                   # Subagent definitions
+```
+
+### `docs/` - Business (Human-Facing)
+```
+docs/
+├── prd/                         # Product requirements
+├── user-flows/                  # User journeys
+├── edge-cases/                  # Business edge cases
+└── api/                         # API docs for consumers
+```
 
 ## Phase 2: Assess Project State
 
@@ -78,6 +125,15 @@ Show the user their current state:
 | Registry | [✅ Found / ❌ Missing] | [path or -] |
 | Specs | [[N] found / ❌ None] | [path or -] |
 | Skills | [✅ Installed / ❌ Missing] | [path or -] |
+| Plugins | [✅ Ready / ⚠️ Marketplaces missing] | `.claude/settings.json` |
+
+### 🔌 Marketplace Status (if any missing)
+| Marketplace | Status | Install Command |
+|-------------|--------|-----------------|
+| claude-plugins-official | [✅ Installed / ❌ Missing] | `claude plugins add claude-plugins-official` |
+| anthropic-agent-skills | [✅ Installed / ❌ Missing] | `claude plugins add https://github.com/anthropics/skills` |
+
+**Note:** If marketplaces are missing, run the install commands above, then restart Claude Code.
 
 ### Health Assessment
 - **Overall:** [New / Partially Set Up / Ready / Needs Maintenance]

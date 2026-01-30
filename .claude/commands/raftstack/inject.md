@@ -2,6 +2,15 @@
 
 Surface relevant standards and skills for the current work context.
 
+## 🔒 Planning Protocol
+
+This command follows the RaftStack Planning Protocol:
+- **No file modifications** - This command is read-only (context injection for planning)
+- If user wants to implement after injecting context, recommend `/raftstack/shape [task]`
+- That command will handle planning and approval gates
+
+**Reference:** See `_planning-protocol.md` for full protocol details.
+
 ## Arguments
 
 - `$ARGUMENTS` - (Optional) Specific domain or task context (e.g., "React component", "API endpoint", "database migration")
@@ -14,6 +23,15 @@ Surface relevant standards and skills for the current work context.
 - Follow-up options
 
 Never use plain text questions - always use the structured `AskUserQuestion` tool.
+
+## Important Note About Implementation
+
+**This command does NOT implement code.** It only surfaces relevant context for planning.
+
+After injecting context, if the user wants to proceed with implementation:
+1. Recommend running `/raftstack/shape [task description]`
+2. The shape command will plan the work and require approval before implementation
+3. Never proceed directly to implementation from this command
 
 ## Phase 1: Context Detection
 
@@ -39,23 +57,22 @@ If context is unclear, use `AskUserQuestion`:
 
 ## Phase 2: Standards Discovery
 
-Scan for standards files in likely locations:
+Scan for standards files:
 
-1. **Check common standard locations:**
+1. **Canonical locations:**
    - `.claude/standards/` and subdirectories
-   - `docs/standards/`
-   - `standards/`
-   - Files matching `*.standard.md`
+   - `.claude/context/constitution.md`
 
-2. **Match by domain:**
+2. **Legacy fallback (suggest migration):**
+   - `docs/standards/`, `standards/`, `*.standard.md`
+   - `CONSTITUTION.md`, `docs/constitution.md`
+
+   If found at legacy locations, suggest migration to `.claude/`.
+
+3. **Match by domain:**
    - React work → look for component, state, hooks standards
    - API work → look for route, validation, error standards
    - Database work → look for schema, query, migration standards
-
-3. **Check for constitution/context:**
-   - `.claude/context/constitution.md`
-   - `CONSTITUTION.md`
-   - `docs/constitution.md`
 
 ## Phase 3: Skills Matching
 
@@ -69,6 +86,28 @@ Based on the detected domain, identify relevant RaftStack skills:
 | SEO | Technical SEO | `.claude/skills/seo/SKILL.md` |
 | General | Code Quality | `.claude/skills/code-quality/SKILL.md` |
 | Asana Integration | Asana Workflow | `.claude/skills/asana/SKILL.md` |
+
+## Phase 3.5: Plugin Recommendations
+
+Based on the detected domain, identify required Claude Code plugins:
+
+### Plugin Enforcement Matrix
+
+| Domain | Plugin | Skill/Tool | When to Trigger |
+|--------|--------|------------|-----------------|
+| React/Frontend/JSX | `frontend-design` | `/frontend-design` skill | Any UI component, JSX, CSS work |
+| React/Frontend/JSX | `figma` | `/implement-design` | Figma files to code |
+| Testing | `playwright` | Browser tools | E2E tests, browser automation |
+| Testing | `superpowers` | `/tdd` skill | Test-driven development |
+| Research/Documentation | `context7` | Documentation lookup | Getting library docs, API references |
+| Code Review | `code-review` | `/code-review` | Before commits, PR creation |
+| Code Review | `pr-review-toolkit` | `/review-pr` | Specialized review agents |
+| Git/Commits | `commit-commands` | `/commit`, `/commit-push-pr` | Any git operations |
+| Git/Commits | `github` | GitHub tools | Issue/PR management |
+| Backend/API | `security-guidance` | Security warnings | API routes, handlers, auth |
+| Deployment | `vercel` | Vercel tools | Deployment-related tasks |
+| Project Management | `linear` | Linear tools | Task tracking with Linear |
+| Project Management | `asana` | Asana tools | Task tracking with Asana |
 
 ## Phase 4: Context-Aware Summary
 
@@ -88,6 +127,13 @@ Present the injected context as a structured summary:
 |-------|------|-------------|
 | [Name] | `[Path]` | [Trigger condition] |
 | [Name] | `[Path]` | [Trigger condition] |
+
+### 🔌 Recommended Plugins
+| Plugin | Purpose | Skill to Use |
+|--------|---------|--------------|
+| [plugin] | [why needed for this domain] | `/[skill-name]` or [tool description] |
+
+**Important:** Always use `context7` when researching libraries or getting documentation.
 
 ### Quick Reference (Most Important Rules)
 1. **[Rule]** - [Brief explanation]

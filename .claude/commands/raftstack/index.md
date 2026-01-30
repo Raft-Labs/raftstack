@@ -2,6 +2,16 @@
 
 Scan for standards files and maintain a registry. Works with any directory structure.
 
+## 🔒 Planning Protocol
+
+This command follows the RaftStack Planning Protocol:
+- All changes are planned before implementation
+- User approval is required before creating/updating registry file
+- User approval is required before resolving drift (file modifications)
+- Use `AskUserQuestion` for all approval gates
+
+**Reference:** See `_planning-protocol.md` for full protocol details.
+
 ## Purpose
 
 Keep track of all standards and context files in the project, regardless of where they're stored.
@@ -9,6 +19,8 @@ Keep track of all standards and context files in the project, regardless of wher
 ## Tool Usage
 
 **IMPORTANT:** Always use the `AskUserQuestion` tool for:
+- **Registry file creation/update approval** (required before writing files)
+- **Drift resolution approval** (required before modifying files)
 - Location negotiation
 - Drift resolution decisions
 - Follow-up options
@@ -17,22 +29,20 @@ Never use plain text questions - always use the structured `AskUserQuestion` too
 
 ## Phase 1: Scan for Standards
 
-Search common locations for standards files:
+Search for standards and context files:
 
-1. **Standard locations:**
-   - `.claude/standards/**/*.md`
-   - `.claude/context/**/*.md`
-   - `docs/standards/**/*.md`
-   - `standards/**/*.md`
-   - `*.standard.md` (root level)
+1. **Canonical locations:**
+   - `.claude/standards/**/*.md` → Project standards
+   - `.claude/context/**/*.md` → Project context
 
-2. **Context files:**
-   - `CONSTITUTION.md`
-   - `.claude/context/constitution.md`
-   - `docs/constitution.md`
-
-3. **Skills (RaftStack-provided):**
+2. **Skills:**
    - `.claude/skills/*/SKILL.md`
+
+3. **Legacy locations (migration detection):**
+   - `docs/standards/**/*.md`, `standards/**/*.md`, `*.standard.md`
+   - `CONSTITUTION.md`, `docs/constitution.md`
+
+   If found at legacy locations, suggest migration to `.claude/`.
 
 ## Phase 2: Analyze Each File
 
@@ -99,15 +109,11 @@ Reference standards in conversation:
 - `/raftstack/inject [domain]` - Get relevant standards for a task
 ```
 
-## Phase 4: Location Negotiation
+## Phase 4: Registry Location
 
-Use `AskUserQuestion` with these options:
-- Option A: `.claude/standards/REGISTRY.md` - With standards (Recommended)
-- Option B: `.claude/REGISTRY.md` - In Claude folder
-- Option C: `docs/REGISTRY.md` - With documentation
-- Option D: Other (let user specify)
+The registry is always saved at: `.claude/standards/REGISTRY.md`
 
-If a registry already exists, update it in place.
+If a registry exists at a legacy location (`.claude/REGISTRY.md` or `docs/REGISTRY.md`), inform the user and migrate it.
 
 ## Phase 5: Drift Detection
 
@@ -175,12 +181,33 @@ After scanning and creating the registry, present:
 - **Option C:** Review violations - Check flagged files for compliance
 - **Option D:** Done for now
 
-**Your options:** [A] Fix orphaned [B] Document areas [C] Review violations [D] Done
 ```
 
-Use `AskUserQuestion` for options.
+#### ⚠️ PLANNING GATE (Before Creating/Updating Registry)
+
+**DO NOT CREATE OR UPDATE REGISTRY FILE WITHOUT USER APPROVAL**
+
+Before writing the registry file:
+
+1. **Present the Indexing Summary Above** (already done)
+
+2. **Request Approval** using `AskUserQuestion` with these options:
+   - [A] Create/update registry file (Recommended)
+   - [B] Fix orphaned standards first
+   - [C] Document undocumented areas first
+   - [D] Review violations first
+   - [E] Cancel (don't create registry)
+
+3. **Implementation Rules:**
+   - ✅ Wait for explicit [A] selection before creating/updating registry
+   - ✅ If [B/C/D] selected, proceed to drift resolution (which has its own gates)
+   - ✅ If [E] selected, stop without creating registry
+   - ❌ Never skip approval
+   - ❌ Never create/update registry file without [A] selection
 
 ## Phase 7: Drift Resolution
+
+**IMPORTANT:** Each drift resolution action requires its own approval gate.
 
 If user chooses to address drift:
 

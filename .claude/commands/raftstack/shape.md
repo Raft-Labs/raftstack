@@ -2,6 +2,15 @@
 
 Plan a feature or task with scale-adaptive depth. Simple tasks get quick flow, complex tasks get full specs.
 
+## 🔒 Planning Protocol
+
+This command follows the RaftStack Planning Protocol:
+- All changes are planned before implementation
+- User approval is required before any file modifications
+- Use `AskUserQuestion` for all approval gates
+
+**Reference:** See `_planning-protocol.md` for full protocol details.
+
 ## Arguments
 
 - `$ARGUMENTS` - Description of the feature or task to plan
@@ -13,6 +22,7 @@ Plan a feature or task with scale-adaptive depth. Simple tasks get quick flow, c
 - Location negotiation
 - Option selection
 - Clarification questions
+- **Implementation approval** (required before any file operations)
 
 Never use plain text questions - always use the structured `AskUserQuestion` tool.
 
@@ -63,12 +73,14 @@ After assessment, use `AskUserQuestion` to confirm the complexity level:
 
 ## Phase 2: Execute Based on Scale
 
+**IMPORTANT:** Each flow level (Quick/Light/Full) MUST include an approval gate before implementation.
+
 ### Quick Flow (Simple Tasks)
 
 1. Clarify scope in 2-3 sentences
 2. Identify the file(s) to change
 3. Describe the change briefly
-4. Proceed directly to implementation
+4. **WAIT FOR APPROVAL** - Do NOT implement yet
 
 Output format:
 ```markdown
@@ -81,12 +93,31 @@ Output format:
 **Files:** [1-2 files]
 **Approach:** [Brief description]
 
-Ready to implement.
-
-**Your options:** [A] Proceed to implement [B] Add more detail [C] Change approach [D] Cancel
+### 🔌 Use These Plugins
+- [Plugin based on domain detected]
 ```
 
-Use `AskUserQuestion` for options.
+#### ⚠️ PLANNING GATE (Quick Flow)
+
+**DO NOT IMPLEMENT WITHOUT USER APPROVAL**
+
+Before implementing:
+
+1. **Present the Plan Above** (already done)
+
+2. **Request Approval** using `AskUserQuestion` with these options:
+   - [A] Proceed to implement (Recommended)
+   - [B] Add more detail
+   - [C] Change approach
+   - [D] Cancel
+
+3. **Implementation Rules:**
+   - ✅ Wait for explicit [A] selection
+   - ✅ If [B] selected, provide more detail and re-present
+   - ✅ If [C] selected, revise approach and re-present
+   - ❌ Never skip approval
+   - ❌ Never implement without [A] selection
+   - ❌ Never create/modify files before approval
 
 ### Light Spec (Medium Tasks)
 
@@ -94,6 +125,7 @@ Use `AskUserQuestion` for options.
 2. Identify related code patterns to follow
 3. List files to create/modify
 4. Note any standards to apply
+5. **WAIT FOR APPROVAL** - Do NOT implement yet
 
 Output format:
 ```markdown
@@ -113,14 +145,40 @@ Output format:
 2. [Step with file path]
 3. [Step with file path]
 
+### 🔌 Plugins to Use
+| Plugin | Purpose | When |
+|--------|---------|------|
+| [Plugin] | [Why needed] | [Trigger condition] |
+
+**Important:** Always use `context7` when researching libraries or getting documentation.
+
 ### Standards to Apply
 - [Reference any discovered standards: @.claude/standards/...]
 - [Reference any skills: @.claude/skills/...]
-
-**Your options:** [A] Proceed to implement [B] Save spec to file [C] Modify plan [D] Upgrade to full spec
 ```
 
-Use `AskUserQuestion` for options.
+#### ⚠️ PLANNING GATE (Light Spec)
+
+**DO NOT IMPLEMENT WITHOUT USER APPROVAL**
+
+Before implementing:
+
+1. **Present the Plan Above** (already done)
+
+2. **Request Approval** using `AskUserQuestion` with these options:
+   - [A] Proceed to implement (Recommended)
+   - [B] Save spec to file
+   - [C] Modify plan
+   - [D] Upgrade to full spec
+
+3. **Implementation Rules:**
+   - ✅ Wait for explicit [A] selection
+   - ✅ If [B] selected, save spec and await further instructions
+   - ✅ If [C] selected, revise plan and re-present
+   - ✅ If [D] selected, transition to Full Spec workflow
+   - ❌ Never skip approval
+   - ❌ Never implement without [A] selection
+   - ❌ Never create/modify files before approval
 
 ### Full Spec (Complex Tasks)
 
@@ -146,13 +204,11 @@ Use `AskUserQuestion` for options.
    - Phase 2: Edge cases/polish
    - Phase 3: Testing/docs
 
-5. **Location negotiation for spec folder:**
+5. **Spec folder location:**
 
-Use `AskUserQuestion` with these options:
-- Option A: `.claude/specs/[feature-slug]/` - Claude-specific planning (Recommended)
-- Option B: `docs/specs/[feature-slug]/` - With documentation
-- Option C: `specs/[feature-slug]/` - At project root
-- Option D: Other (let user specify)
+Specs are always saved at: `.claude/specs/{YYYY-MM-DD-HHMM}-{feature-slug}/`
+
+**Note:** For business requirements (PRD, user stories), use `docs/prd/` instead.
 
 ## Full Spec Folder Structure
 
@@ -204,6 +260,13 @@ After creating the spec folder, present:
 - **references.md:** [N] similar patterns found
 - **architecture.md:** Technical design
 
+### 🔌 Plugins & Skills
+| Plugin | Purpose | When |
+|--------|---------|------|
+| [Plugin] | [Why needed] | [Trigger condition] |
+
+**Important:** Always use `context7` when researching libraries or getting documentation.
+
 ### 🔍 Implementation Phases
 1. **Phase 1:** [Core functionality] - [N files]
 2. **Phase 2:** [Edge cases] - [N files]
@@ -213,22 +276,40 @@ After creating the spec folder, present:
 - [Risk or complexity] - **Mitigation:** [How to handle]
 - [Dependency or blocker] - **Status:** [Current state]
 
-### 🔄 Ready for Implementation
+### 📁 Spec Location
 Spec folder created at: `{path}`
-
-**Your options:** [A] Start implementation [B] Review spec files [C] Modify architecture [D] Add more detail
 ```
 
-Use `AskUserQuestion` for options.
+#### ⚠️ PLANNING GATE (Full Spec)
+
+**DO NOT IMPLEMENT WITHOUT USER APPROVAL**
+
+Before implementing:
+
+1. **Present the Plan Above** (already done)
+
+2. **Request Approval** using `AskUserQuestion` with these options:
+   - [A] Start implementation (Recommended)
+   - [B] Review spec files in detail
+   - [C] Modify architecture
+   - [D] Add more detail
+
+3. **Implementation Rules:**
+   - ✅ Wait for explicit [A] selection
+   - ✅ If [B] selected, review spec files and re-present
+   - ✅ If [C] selected, revise architecture and re-present
+   - ✅ If [D] selected, expand spec and re-present
+   - ❌ Never skip approval
+   - ❌ Never implement without [A] selection
+   - ❌ Never create/modify code files before approval
+   - ✅ Spec folder creation is allowed (it's planning, not implementation)
 
 ## Phase 3: Standards Injection
 
 Before finalizing the plan, check for relevant standards and skills:
 
-1. Scan for standards files in likely locations:
+1. Scan for standards at canonical location:
    - `.claude/standards/`
-   - `docs/standards/`
-   - Project root (`*.standard.md`)
 
 2. Identify relevant skills based on the task domain:
    - React work → `@.claude/skills/react/SKILL.md`
