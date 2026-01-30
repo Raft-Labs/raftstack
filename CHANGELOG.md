@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.9.3](https://github.com/Raft-Labs/raftstack/compare/v1.9.0...v1.9.3) (2026-01-30)
+
+
+### Features
+
+* add `install-commands` CLI and enhance Claude Code setup ([0b1946d](https://github.com/Raft-Labs/raftstack/commit/0b1946de285f9da0c2e1a781d8db71879cf7826d))
+* bundle Claude Code subagents and settings.json in CLI ([1feccee](https://github.com/Raft-Labs/raftstack/commit/1fecceec4f03b96ba2b4fcca43d109f53c14f662))
+* enforce plan-first workflow across all RaftStack commands ([8ea3375](https://github.com/Raft-Labs/raftstack/commit/8ea33756b583a8350d873a6f8e34ddc961836042))
+
+
+### Documentation
+
+* add comprehensive end-user guide ([161902d](https://github.com/Raft-Labs/raftstack/commit/161902d53989f73b6eabd3484784c3f7b79de9c5))
+* remove obsolete documentation files ([ec7e760](https://github.com/Raft-Labs/raftstack/commit/ec7e7604c6d0ee4fcaec81b3f848628c532c216b))
+* simplify business documentation sections in help.md ([57c0ebb](https://github.com/Raft-Labs/raftstack/commit/57c0ebbb4dc44fc1a0d44d81ecd3b4eb3ef4062e))
+* streamline READMEs and link to USER_GUIDE.md ([b299c8d](https://github.com/Raft-Labs/raftstack/commit/b299c8d951cbd0cc127c6106fa3e6b955b6e2f35))
+
 ### [1.9.2](https://github.com/Raft-Labs/raftstack/compare/v1.9.0...v1.9.2) (2026-01-29)
 
 
