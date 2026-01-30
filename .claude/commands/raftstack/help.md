@@ -32,17 +32,7 @@ Check if required Claude Code marketplaces are installed:
 2. **If missing, note in Health Assessment for installation guidance**
 
 ### Business Documentation (`docs/`)
-- `docs/prd/` → Product requirements
-- `docs/user-flows/` → User journey documentation
-- `docs/edge-cases/` → Edge case documentation
-
-### Legacy Locations (suggest migration)
-- `CONSTITUTION.md`, `docs/constitution.md` → Migrate to `.claude/context/constitution.md`
-- `docs/standards/`, `standards/`, `*.standard.md` → Migrate to `.claude/standards/`
-- `docs/specs/`, `specs/` → Migrate to `.claude/specs/`
-- `.claude/REGISTRY.md`, `docs/REGISTRY.md` → Migrate to `.claude/standards/REGISTRY.md`
-
-If artifacts are found at legacy locations, include a migration recommendation in the health assessment.
+All business logic and product-specific files are stored in the `docs/` folder.
 
 ## Planning Protocol
 
@@ -78,13 +68,7 @@ For details, see `.claude/commands/raftstack/_planning-protocol.md`
 ```
 
 ### `docs/` - Business (Human-Facing)
-```
-docs/
-├── prd/                         # Product requirements
-├── user-flows/                  # User journeys
-├── edge-cases/                  # Business edge cases
-└── api/                         # API docs for consumers
-```
+Contains all business logic and product-specific documentation.
 
 ## Phase 2: Assess Project State
 
